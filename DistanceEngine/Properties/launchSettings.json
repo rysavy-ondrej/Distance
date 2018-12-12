@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DistanceEngine": {
+      "commandName": "Project",
+      "commandLineArgs": "Data\\test.json"
+    }
+  }
+}

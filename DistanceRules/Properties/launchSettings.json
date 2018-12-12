@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DistanceRules": {
+      "commandName": "Project",
+      "commandLineArgs": "Data\\test.json"
+    }
+  }
+}
