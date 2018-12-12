@@ -12,3 +12,9 @@ $ dotnet DistanceEngine.dll [SOURCE-PCAP]
 
 The program loads the input pcap, executes `tshark` for decoding packets and applies rules from `DistanceRules`. The output containing 
 identified issues is written to `.log` file.
+
+## Dependencies
+* NRules
+* TShark
+* SharpPcap
+* PacketDotNet
