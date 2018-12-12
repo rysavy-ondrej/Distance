@@ -17,12 +17,24 @@ namespace Distance.Shark
     /// </summary>
     public abstract class TSharkProcess<TDecodedRecord>
     {
-        
+        static TSharkProcess()
+        {
+            switch (System.Environment.OSVersion.Platform)
+            {
+                case PlatformID.Unix:
+                    m_tsharkPath = @"/usr/local/bin/tshark";
+                    break;
+                case PlatformID.Win32NT:
+                    m_tsharkPath = @"C:\Program Files\Wireshark\tshark.exe";
+                    break;
+            }
+        }
+
         private bool m_exportObjects;
         private string m_exportedObjectsPath;
         private string m_pipeName = "tshark";
         private string m_cmdline;
-        private string m_tsharkPath = @"C:\Program Files\Wireshark\tshark.exe";
+        private static string m_tsharkPath;
 
         private Process m_tsharkProcess;
         /// <summary>
@@ -30,6 +42,7 @@ namespace Distance.Shark
         /// </summary>
         public TSharkProcess()
         {
+
         }
 
         public TSharkProcess(string pipeName): this()
