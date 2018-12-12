@@ -2,7 +2,7 @@
   "profiles": {
     "DistanceEngine": {
       "commandName": "Project",
-      "commandLineArgs": "Data\\test.json"
+      "commandLineArgs": "Data\\test.pcap"
     }
   }
 }

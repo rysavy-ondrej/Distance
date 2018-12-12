@@ -6,16 +6,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NLog" Version="4.5.11" />
     <PackageReference Include="NRules" Version="0.8.4" />
     <PackageReference Include="NRules.Runtime" Version="0.8.4" />
+    <PackageReference Include="SharpPcap" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DistanceDomain\DistanceDomain.csproj" />
     <ProjectReference Include="..\DistanceRules\DistanceRules.csproj" />
+    <ProjectReference Include="..\DistanceShark\DistanceShark.csproj" />
+    <ProjectReference Include="..\DistanceUtils\DistanceUtils.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Data\test.pcap">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\test.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

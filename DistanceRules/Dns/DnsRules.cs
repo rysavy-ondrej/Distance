@@ -1,67 +1,71 @@
 ﻿using Distance.Domain.Dns;
 using NRules.Fluent.Dsl;
+using Distance.Utils;
+using NRules.RuleModel;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using NLog;
+
 namespace Distance.Rules.Dns
 {
-    [Name("Dns.MatchRequestResponse"), Description("The rule identifies pairs of request and response messages.")]
-    public class MatchRequestResponseRule : Rule
+    [Name("Dns.RequestResponse"), Description("The rule identifies pairs of request and response messages.")]
+    public class DnsRequestResponseRule : Rule
     {
         public override void Define()
         {
-            DnsModel qry = null;
-            DnsModel res = null;
+            DnsModel query = null;
+            DnsModel response = null;
 
             When()
-                .Match<DnsModel>(() => qry, x => x.DnsFlagsResponse == "0")
-                .Match<DnsModel>(() => res, x => x.DnsFlagsResponse == "1", x => x.DnsId == qry.DnsId);
+                .Match<DnsModel>(() => query, x => x.DnsFlagsResponse == "0")
+                .Match<DnsModel>(() => response, x => x.DnsFlagsResponse == "1", x => x.DnsId == query.DnsId);
 
             Then()
-                .Do(ctx => ctx.Insert(new DnsQueryResponse { Query = qry, Response = res }));
+                .Yield(ctx => new DnsQueryResponseModel { Query = query, Response = response });
         }
     }
 
-    [Name("Dns.NoReply"), Description("The rule finds DNS requests without responses.")]
-    public class NoReplyRule : Rule
+    [Name("Dns.ResponseError"), Description("The rule is fired for all DNS responses with error code != 0.")]
+    public class DnsResponseErrorRule : Rule
     {
         public override void Define()
         {
-            DnsModel qry = null;
+            DnsQueryResponseModel qr = null;
             When()
-                .Match<DnsModel>(() => qry, x => x.DnsFlagsResponse == "0")
-                .Not<DnsModel>(x => x.DnsFlagsResponse == "1", x => x.DnsId == qry.DnsId);
+                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsFlagsRcode.ToInt(0) != 0);
 
             Then()
-                .Do(ctx => ctx.Error($"No Response for DNS query {qry} found."));
+                .Do(ctx => ctx.Error($"DNS query {qr.Query} yields to error response {qr.Response}. Response time was {qr.Response.DnsTime}s."))
+                .Yield(ctx => new DnsResponseErrorModel { Query = qr.Query, Response = qr.Response });
         }
     }
 
 
-    [Name("Dns.QueryResponse.Info"), Description("The rule prints information about every found pair of DNS messages.")]
-    public class QueryResponseInfoRule : Rule
+    [Name("Dns.NoResponse"), Description("The rule finds DNS requests without responses.")]
+    public class NoResponseRule : Rule
     {
         public override void Define()
         {
-            DnsQueryResponse qr = null;
+            DnsModel query = null;
             When()
-                .Match<DnsQueryResponse>(() => qr, x => x.Response.DnsTime.ToDouble(0) <= 1.0);
+                .Match<DnsModel>(() => query, x => x.DnsFlagsResponse == "0")
+                .Not<DnsModel>(x => x.DnsFlagsResponse == "1", x => x.DnsId == query.DnsId);
+
             Then()
-                .Do(ctx => ctx.Info($"Detected DNS query {qr.Query} and its response {qr.Response}. Response time was {qr.Response.DnsTime}s."));
+                .Do(ctx => ctx.Error($"No Response for DNS query {query} found."))
+                .Yield(_ => new DnsNoResponseModel { Query = query });
         }
     }
 
-    [Name("Dns.ReplyBigLatency"), Description("The rule finds DNS replies that have latency greater than 1s.")]
-    public class ReplyBigLatencyRule : Rule
+    [Name("Dns.DelayedResponse"), Description("The rule finds DNS replies that have latency greater than 1s.")]
+    public class DelayedResponseRule : Rule
     {
         public override void Define()
         {
-            DnsQueryResponse qr = null;
+            DnsQueryResponseModel qr = null;
             When()
-                .Match<DnsQueryResponse>(() => qr, x => x.Response.DnsTime.ToDouble(0) > 1.0);
+                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsTime.ToDouble(0) > 1.0);
             Then()
                 .Do(ctx => ctx.Warn($"Response time is high ({qr.Response.DnsTime}s) for DNS query {qr.Query} and its response {qr.Response}."));
         }
     }
 }
+ 

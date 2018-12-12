@@ -1,0 +1,34 @@
+
+- rule: Dns.RequestResponse
+  when:
+    match:
+      - DnsModel query: query.DnsFlagResponse == 0
+      - DnsModel response: response.DnsFlagResponse == 1 && query.DnsId == response.DnsId
+  then:
+    yield: DnsQueryResponse(Query = query, Response = response)
+  
+- rule: Dns.ResponseError
+  description: "The rule is fired for all DNS responses with error code != 0."
+  when:
+    match: 
+      - DnsQueryResponse qr: qr.Response.DnsFlagsRcode != 0
+  then:  
+    error: "DNS query {qr.Query} yields to error response {qr.Response}. Response time was {qr.Response.DnsTime}s."
+    yield: DnsResponseError(Query = qr.Query, Response = qr.Response)
+
+- rule: Dns.NoResponse
+  when:
+    match:
+      - DnsModel query: query.DnsFlagsResponse == 0
+    not:
+      - DnsModel x: x.DnsFlagResponse == 1 && x.DnsId == query.DnsId
+  then: 
+    error: "No Response for DNS query {query} found."
+    yield: DnsNoResponse(Query = query)
+
+- rule: Dns.DelayedResponse
+  when:
+    match:
+      - DnsQueryResponse qr: qr.Response.DnsTime > 5
+  then:
+    warn: "Response time is high ({qr.Response.DnsTime}s) for DNS query {qr.Query} and response {qr.Response}."

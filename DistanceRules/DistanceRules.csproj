@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DistanceDomain\DistanceDomain.csproj" />
+    <ProjectReference Include="..\DistanceUtils\DistanceUtils.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,17 +7,9 @@ using System.Text;
 
 namespace Distance.Rules
 {
-    public static class ContextExtensions
+    public static class Context
     {
-        static ContextExtensions()
-        {
-            var config = new NLog.Config.LoggingConfiguration();
-            var logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
-            LogManager.Configuration = config;
-        }
-
-        static Logger m_logger = LogManager.GetCurrentClassLogger();
+        static Logger m_logger = LogManager.GetLogger("DISTANCE");
         
         /// <summary>
         /// Prints the Warning message.
@@ -25,8 +17,8 @@ namespace Distance.Rules
         /// <param name="context"></param>
         /// <param name="message"></param>
         public static void Warn(this IContext context, string message)
-        {
-            m_logger.Warn(message);
+        {            
+            m_logger.Warn($"{context.Rule.Name}: {message}");
         }
 
         /// <summary>
@@ -36,7 +28,7 @@ namespace Distance.Rules
         /// <param name="message"></param>
         public static void Error(this IContext context, string message)
         {
-            m_logger.Error(message);
+            m_logger.Error($"{context.Rule.Name}: {message}");
         }
 
         /// <summary>
@@ -46,7 +38,7 @@ namespace Distance.Rules
         /// <param name="message"></param>
         public static void Info(this IContext context, string message)
         {
-            m_logger.Info(message);            
+            m_logger.Info($"{context.Rule.Name}: {message}");            
         }
     }
 }
