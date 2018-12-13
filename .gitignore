@@ -333,3 +333,15 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 *.pcap
+.vagrant/machines/default/hyperv/action_configure
+.vagrant/machines/default/hyperv/action_provision
+.vagrant/machines/default/hyperv/action_set_name
+.vagrant/machines/default/hyperv/box_meta
+.vagrant/machines/default/hyperv/creator_uid
+.vagrant/machines/default/hyperv/id
+.vagrant/machines/default/hyperv/index_uuid
+.vagrant/machines/default/hyperv/private_key
+.vagrant/machines/default/hyperv/synced_folders
+.vagrant/machines/default/hyperv/vagrant_cwd
+.vagrant/machines/default/hyperv/Virtual Hard Disks/disk.vhd
+.vagrant/rgloader/loader.rb

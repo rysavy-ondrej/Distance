@@ -16,21 +16,24 @@ namespace Distance.Utils
             return default(T);
         }
 
-        public static int ToInt(this string value, int defval = 0)
+        public static int ToInt(this string value) => ToInt(value, 0);
+        public static int ToInt(this string value, int defval)
         {
             if (int.TryParse(value, out int result))
                 return result;
             else
                 return defval;
         }
-        public static long ToLong(this string value, long defval = 0)
+        public static long ToLong(this string value) => ToLong(value, 0L);
+        public static long ToLong(this string value, long defval)
         {
             if (long.TryParse(value, out long result))
                 return result;
             else
                 return defval;
         }
-        public static double ToDouble(this string value, double defval = 0)
+        public static double ToDouble(this string value) => ToDouble(value, 0D);
+        public static double ToDouble(this string value, double defval)
         {
             if (double.TryParse(value, out double result))
                 return result;
