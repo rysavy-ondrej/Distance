@@ -26,4 +26,7 @@ Vagrant.configure(2) do |config|
   # Install tshark:
   config.vm.provision "shell", path: "Scripts/install-tshark.sh" 
   
+  # Install distance runner:
+  config.vm.provision "file", source: "Scripts/distance", destination: "/usr/local/bin/distance"
+
 end
