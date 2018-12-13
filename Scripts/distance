@@ -1,0 +1,2 @@
+#!/bin/bash
+dotnet run --project /distance/DistanceEngine/DistanceEngine.csproj $@

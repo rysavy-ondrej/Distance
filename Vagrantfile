@@ -4,52 +4,26 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "centos/7"
 
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
-  # config.vm.network "private_network", ip: "192.168.33.10"
-  # config.vm.network "public_network"
+  if Vagrant::Util::Platform.windows?
+	# default windows share (SMB)
+    config.vm.synced_folder ".", "/distance", type: "rsync"
+  elsif Vagrant.has_plugin?("vagrant-sshfs") then
+	  config.vm.synced_folder ".", "/distance", type: "sshfs"
+  else
+    config.vm.synced_folder ".", "/distance", type: "rsync"
+  end
 
-  config.vm.synced_folder ".", "/distance", type: "rsync"
-
-  # Provider-specific configuration so you can fine-tune various
-  # backing providers for Vagrant. These expose provider-specific options.
-  # Example for VirtualBox:
-
-   config.vm.provider "virtualbox" do |vb|
-      # Display the VirtualBox GUI when booting the machine
-      # vb.gui = true
-
-      # Customize the amount of memory on the VM:
+  config.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
-   end
+  end
+  config.vm.provider "hyperv" do |hv|
+      hv.memory = "1024"
+  end
      
   # Install dotnet:
-  config.vm.provision "shell", inline: <<-SHELL
-     sudo rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
-     sudo yum update
-     sudo yum install dotnet-sdk-2.2
-  SHELL  
+  config.vm.provision "shell", path: "Scripts/install-dotnet.sh"
   
   # Install tshark:
-  config.vm.provision "shell", inline: <<-SHELL
-     (
-        yum install -y wireshark tcpflow unzip
-     )
-  SHELL 
+  config.vm.provision "shell", path: "Scripts/install-tshark.sh" 
   
-
-  # Compile and install DISTANCE
-  config.vm.provision "shell", inline: <<-SHELL
-     (
-       cd /distance-repo
-       ./bootstrap.sh &&
-       ./configure --prefix=/opt/distance -q &&
-       make -j2 &&
-       sudo make install
-       cd pyrocksdb
-       sudo python setup.py test
-       sudo python setup.py install
-     )
-  SHELL
-
-
 end
