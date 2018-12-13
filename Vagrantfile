@@ -8,7 +8,7 @@ Vagrant.configure(2) do |config|
   # config.vm.network "private_network", ip: "192.168.33.10"
   # config.vm.network "public_network"
 
-  config.vm.synced_folder ".", "/distance", type: "sshfs"
+  config.vm.synced_folder ".", "/distance", type: "rsync"
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -24,9 +24,9 @@ Vagrant.configure(2) do |config|
      
   # Install dotnet:
   config.vm.provision "shell", inline: <<-SHELL
-     rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
-     yum update
-     yum install dotnet-sdk-2.2
+     sudo rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
+     sudo yum update
+     sudo yum install dotnet-sdk-2.2
   SHELL  
   
   # Install tshark:
