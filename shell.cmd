@@ -1,0 +1,1 @@
+powershell -Command "Start-Process -FilePath powershell.exe -Verb runas -ArgumentList \"-NoExit\", \"-Command Set-Location $pwd\" "
