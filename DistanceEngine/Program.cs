@@ -3,6 +3,7 @@ using Distance.Domain.Dns;
 using Distance.Rules;
 using Distance.Rules.Dns;
 using Distance.Shark;
+using Microsoft.Extensions.CommandLineUtils;
 using NLog;
 using NRules;
 using NRules.Fluent;
@@ -19,17 +20,7 @@ namespace Distance.Engine
 {
     class Program
     {
-        static void ExecTime(string message, Action action)
-        {
-            var sw = new Stopwatch();
-            Console.Write($"{message}...");
-            sw.Start();
-            action();
-            sw.Stop();
-            Console.WriteLine($"ok ({sw.Elapsed}).");
-        }
-
-        static void ConfigureLog(string filename, bool logToConsole = false)
+        public static void ConfigureLog(string filename, bool logToConsole = false)
         {
             var config = new NLog.Config.LoggingConfiguration();
 
@@ -41,86 +32,52 @@ namespace Distance.Engine
                 var logconsole = new NLog.Targets.ColoredConsoleTarget();
                 config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole);
             }
-            
+
             LogManager.Configuration = config;
         }
 
+        public class Options
+        {
+            public CommandOption EnableDebug { get; internal set; }
+        }
 
+        Logger logger = NLog.LogManager.GetCurrentClassLogger();
         static void Main(string[] args)
         {
 
-            if (args.Length != 1 || !File.Exists(args[0]))
+            var commandLineApplication = new CommandLineApplication
             {
-                Console.WriteLine("Usage: dotnet DistanceRules [source-dns-file.pcap]");
-                return;
-            }
-            var inputFilename = args[0];
-            ConfigureLog(Path.ChangeExtension(inputFilename, "log"));
-            var sw = new Stopwatch();
+                Name = "distance"
+            };
+            commandLineApplication.HelpOption("-?|-help");
 
-            //--- LOADING PACKETS:
-            var inputDevice = new CaptureFileReaderDevice(inputFilename);
-
-            inputDevice.Open();
-            var tsharkProcess = new TSharkProtocolDecoderProcess<PacketModel>(packetCreator, "icmp", "ip", "dns");
-
-            IEnumerable<RawCapture> ReadAllFrames(CaptureFileReaderDevice input)
+            var options = new Options
             {
-                SharpPcap.RawCapture capture;
-                while ((capture = input.GetNextPacket()) != null)
-                {
-                    yield return capture;
-                }
-            }
-            sw.Restart();
-            Console.Write($"Loading and decoding packets from '{inputFilename}'...");
-            var frames = ReadAllFrames(inputDevice);
-            var packets = TSharkDecoder.Decode(frames, tsharkProcess).ToList();
-            inputDevice.Close();
-            tsharkProcess.Close();
-            Console.WriteLine($"ok [{sw.Elapsed}].");
+                EnableDebug = commandLineApplication.Option("-debug", "Enable debug output.", CommandOptionType.NoValue)
+            };
 
-            sw.Restart();
-            var repository = new RuleRepository();
-            var assembly = typeof(DnsRequestResponseRule).Assembly;
-            Console.Write($"Loading rules from assembly '{assembly.FullName}'...");
-            repository.Load(x => x.From(assembly));
-            Console.WriteLine($"ok [{sw.Elapsed}].");
+            commandLineApplication.Command(RunCommand.Name, configuration: new RunCommand(options).Configuration);
+            commandLineApplication.Command(BuildCommand.Name, configuration: new BuildCommand(options).Configuration);
 
+            commandLineApplication.OnExecute(() => {
+                commandLineApplication.Error.WriteLine("Error: Command not specified!");
+                commandLineApplication.ShowHelp();
+                return 0;
+            });
 
-            sw.Restart();
-            Console.Write("Compiling rules...");
-            var factory = repository.Compile();
-            Console.WriteLine($"ok [{sw.Elapsed}].");
-
-
-            sw.Restart();
-            Console.Write("Creating a session...");
-            var session = factory.CreateSession();
-            Console.WriteLine($"ok [{sw.Elapsed}].");
-
-
-            sw.Restart();
-            Console.Write($"Inserting facts ({packets.Count}) to the session...");
-            session.InsertAll(packets);
-            Console.WriteLine($"ok [{sw.Elapsed}].");
-
-
-            sw.Restart();
-            Console.WriteLine("Starting the engine...");
-            //Start match/resolve/act cycle
-            session.Fire();
-            Console.WriteLine($"done [{sw.Elapsed}].");
-
-        }
-
-        private static PacketModel packetCreator(string protocols, IDictionary<string, object> fields)
-        {
-            if (protocols.Contains("dns"))
+            try
             {
-                return new DnsModel(fields);
+                commandLineApplication.Execute(args);
             }
-            return new GenericPacketModel(fields);
+            catch (CommandParsingException e)
+            {
+                commandLineApplication.Error.WriteLine($"Error: {e.Message}");
+                commandLineApplication.ShowHelp();
+            }
+            catch(Exception e)
+            {
+                commandLineApplication.Error.WriteLine($"Error: {e.Message}");
+            }
         }
     }
 }
