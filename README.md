@@ -69,6 +69,18 @@ Diagnostic output written to '/home/vagrant/pcaps/testbed-16.log'.
 [vagrant@localhost pcaps]$
 ```
 
+The output is written to `testbed-16.log`. Its content consists of 58 lines each giving information about a single issue found in DNS communication,
+for example:
+
+```
+...
+2018-12-14 12:16:43.5651|ERROR|DISTANCE|Dns.NoResponse: No Response for DNS query [Dns: frame.number=22120 ip.src=192.168.5.122 ip.dst=224.0.0.251 dns.flags.response=0 dns.id=0x00000000 dns.qry.name='105.1.168.192.in-addr.arpa' dns.time= dns.flags.rcode=] found.
+
+2018-12-14 12:16:43.5726|ERROR|DISTANCE|Dns.ResponseError: DNS query [Dns: frame.number=6410 ip.src=192.168.2.107 ip.dst=192.168.5.122 dns.flags.response=0 dns.id=0x0000d52c dns.qry.name='wpad.testbed.lan' dns.time= dns.flags.rcode=] yields to error NXDOMAIN (Domain name does not exist) . DNS response [Dns: frame.number=6411 ip.src=192.168.5.122 ip.dst=192.168.2.107 dns.flags.response=1 dns.id=0x0000d52c dns.qry.name='wpad.testbed.lan' dns.time=0.000540000 dns.flags.rcode=3]. Response time was 0.000540000s.
+...
+```
+
+
 While it is still too early to evaluate the performance, the following table contains some preliminary results measured for the DNS diagnostic ruleset (just 4 rules):
 
 | Input size    | DNS packets        | TShark DNS decoding | Rules Evaluation Time | Detected Issues |
