@@ -39,32 +39,59 @@ namespace Distance.Engine
         }
 
 
-        public int AnalyzeInput(string inputFilename)
+        public static IEnumerable<string> ExecTShark(string inputfile, string protocol, params string[] fields)
         {
-            if (!File.Exists(inputFilename)) throw new ArgumentException($"File '{inputFilename}' does not exist.");
-            Program.ConfigureLog(Path.ChangeExtension(inputFilename, "log"));
-            var sw = new Stopwatch();
+            var fieldString = String.Join(" -e ", fields);
+            var arguments = $"-r {inputfile} -Y {protocol} -T fields -e {fieldString}";
 
-            //--- LOADING PACKETS:
-            var inputDevice = new CaptureFileReaderDevice(inputFilename);
-
-            inputDevice.Open();
-            var tsharkProcess = new TSharkProtocolDecoderProcess<PacketModel>(packetCreator, "icmp", "ip", "dns");
-
-            IEnumerable<RawCapture> ReadAllFrames(CaptureFileReaderDevice input)
+            var process = new Process()
             {
-                SharpPcap.RawCapture capture;
-                while ((capture = input.GetNextPacket()) != null)
+                StartInfo = new ProcessStartInfo
                 {
-                    yield return capture;
+                    FileName = "tshark",
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+            process.Start();
+            while (true)
+            {
+                string line = process.StandardOutput.ReadLine();
+                if (line != null)
+                {
+                    yield return line;
+                }
+                else
+                {
+                    break;
                 }
             }
-            sw.Restart();
-            Console.Write($"Loading and decoding packets from '{inputFilename}'...");
-            var frames = ReadAllFrames(inputDevice);
-            var packets = TSharkDecoder.Decode(frames, tsharkProcess).ToList();
-            inputDevice.Close();
-            tsharkProcess.Close();
+
+            process.WaitForExit();
+        }
+
+        public void GenerateProtocolData()
+        {
+
+        }
+
+
+        public int AnalyzeInput(string input)
+        {
+            if (!File.Exists(input)) throw new ArgumentException($"File '{input}' does not exist.");
+            var pcapPath = Path.GetFullPath(input);
+            var logPath = Path.ChangeExtension(pcapPath, "log");
+
+            Program.ConfigureLog(logPath);
+            var sw = new Stopwatch();
+            sw.Start();
+            
+            Console.Write($"Loading and decoding packets from '{pcapPath}'...");
+            var fields = DnsModel.Fields;
+            var protocol = DnsModel.Protocol;
+            var dnsPackets = ExecTShark(pcapPath, protocol, fields).Select(DnsModel.CreateFromLine).ToList();
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
@@ -88,17 +115,23 @@ namespace Distance.Engine
 
 
             sw.Restart();
-            Console.Write($"Inserting facts ({packets.Count}) to the session...");
-            session.InsertAll(packets);
+            Console.Write($"Inserting facts ({dnsPackets.Count}) to the session...");
+            session.InsertAll(dnsPackets);
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
 
             sw.Restart();
-            Console.WriteLine("Starting the engine...");
+            Console.Write("Waiting for completion...");
             //Start match/resolve/act cycle
-            var result = session.Fire();
+            while (true)
+            {
+                var fired = session.Fire(100);
+                if (fired == 0) break;
+                else Console.Write(".");
+            }
             Console.WriteLine($"done [{sw.Elapsed}].");
-            return result;
+            Console.WriteLine($"Diagnostic output written to '{logPath}'.");
+            return 0;
         }
 
         private PacketModel packetCreator(string protocols, IDictionary<string, object> fields)

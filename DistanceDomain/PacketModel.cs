@@ -2,33 +2,40 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Text;
 
 namespace Distance.Domain
 {
     public abstract class PacketModel : DynamicObject
     {
+        public static readonly Char Separator = '\t';
         private readonly IDictionary<string, object> m_fields;
 
         public int FrameNumber
         {
-            get => this["frame_frame_number"]?.To<int>() ?? 0;
-            set { this["frame_frame_number"] = value; }
+            get => this["frame.number"]?.To<int>() ?? 0;
+            set { this["frame.number"] = value; }
         }
         public string IpSrc
         {
-            get => this["ip_ip_src"].ToString();
-            set => this["ip_ip_src"] = value;
+            get => this["ip.src"].ToString();
+            set => this["ip.src"] = value;
         }
         public string IpDst
         {
-            get => this["ip_ip_dst"].ToString();
-            set => this["ip_ip_dst"] = value;
+            get => this["ip.dst"].ToString();
+            set => this["ip.dst"] = value;
         }
 
         public PacketModel(IDictionary<string,object> fields)
         {
             m_fields = fields;
+        }
+
+        public PacketModel(IEnumerable<KeyValuePair<string,string>> fields)
+        {
+            m_fields = fields.ToDictionary(x=> x.Key, y => (object)y.Value);
         }
 
         public PacketModel()
@@ -59,15 +66,22 @@ namespace Distance.Domain
             }
         }
 
+        /// <summary>
+        /// We compute the "canonical" name from the property name. 
+        /// The property name uses Capitalization to sperate parts of the property path.
+        /// For example, 'DnsId' is translated to 'dns.id'.
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <returns></returns>
         string GetCannonicalName(string propertyName)
         {
             List<Char> cannonicalName = new List<char>();
-            // replace all upper case with lower case preceding with '_'
+            // replace all upper case with lower case preceding with '.'
             foreach(var ch in propertyName)
             {
                 if (Char.IsUpper(ch))
                 {
-                    cannonicalName.Add('_');
+                    if (cannonicalName.Count != 0) cannonicalName.Add('.');
                     cannonicalName.Add(Char.ToLower(ch));
                 }
                 else
@@ -84,7 +98,7 @@ namespace Distance.Domain
         {
             // Converting the property name to lowercase
             // so that property names become case-insensitive.
-            string name = binder.Name.ToLower();
+            string name = GetCannonicalName(binder.Name);
 
             // If the property name is found in a dictionary,
             // set the result parameter to the property value and return true.
@@ -99,7 +113,9 @@ namespace Distance.Domain
         {
             // Converting the property name to lowercase
             // so that property names become case-insensitive.
-            m_fields[binder.Name.ToLower()] = value;
+            string name = GetCannonicalName(binder.Name);
+
+            m_fields[name] = value;
 
             // You can always add a value to a dictionary,
             // so this method always returns true.

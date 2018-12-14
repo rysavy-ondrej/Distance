@@ -46,9 +46,21 @@ Options:
 ```
 
 ### Build Command
+Not implemented yet :(.
 
 
 
+## Performance
+While it is still too eraly to evaluate performance here are some preliminary results measured for DNS diagnostic ruleset:
+
+| Input size    | DNS packets        | TShark DNS decoding | Rules Evaluation Time | Detected Issues |
+| ------------- | ------------------ | ------------------- | --------------------- | --------------- |
+| 16 MB         | 306                | 1.62s               | 0.10s                 | 58              | 
+| 32 MB         | 580                | 2.58s               | 0.14s                 | 103             |
+| 64 MB         | 2084               | 6.11s               | 0.50s                 | 327             |
+| 128 MB        | 4530               | 14.41s              | 1.88s                 | 594             |
+
+Again, this is just for a quick info on the computation costs as the DNS rule set contains only 4 relatively simple rules.
 ## Dependencies
 
 | Tool/Library    | Usage        | Homepage                                             | Licence                                |
