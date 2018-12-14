@@ -13,7 +13,7 @@ The easiest way of running the tool is to use Vagrant. To do so, just type
 ## Usage:
 
 The `DistanceEngine` project is a .NET Core console application that do all the things.  When running in the virtual machine, 
-`distance` command is available that does all the necesary things to run the `DistanceEngine` application. 
+`distance` command is available to run the `DistanceEngine` application. 
 The program offers several commands to build and run the diagnostic engine:
 
 ```
@@ -32,8 +32,8 @@ The `build` command is supposed to be used during development, when new rules ar
 The `run` command runs the diagnostic engine for provided packet source file. 
 
 ### Run Command
-The program loads the input pcap, executes `tshark` for decoding packets and applies rules from `DistanceRules`. 
-The output containing identified issues is written to `.log` file and optionally also to console.
+The program loads the input pcap, executes `tshark` for decoding packets and applies diagnostic rules. 
+The output containing identified issues is written to `.log` file. See bellow for the examples.
 
 ```
 Usage: distance run [arguments] [options]
@@ -51,10 +51,10 @@ Not implemented yet :(.
 
 
 ## Example
-The following is an example of running the tool:
+The following is an example of running the tool identifying DNS problems:
 
 ```
-$ vargant ssh
+$ vagrant ssh
 [vagrant@localhost]$ mkdir pcap
 [vagrant@localhost]$ cd pcap
 [vagrant@localhost]$ wget www.fit.vutbr.cz/~rysavy/distance.datasets/testbed-16.pcap
@@ -69,7 +69,7 @@ Diagnostic output written to '/home/vagrant/pcaps/testbed-16.log'.
 [vagrant@localhost pcaps]$
 ```
 
-While it is still too early to evaluate performance here are some preliminary results measured for DNS diagnostic ruleset:
+While it is still too early to evaluate the performance, the following table contains some preliminary results measured for the DNS diagnostic ruleset (just 4 rules):
 
 | Input size    | DNS packets        | TShark DNS decoding | Rules Evaluation Time | Detected Issues |
 | ------------- | ------------------ | ------------------- | --------------------- | --------------- |
@@ -78,7 +78,7 @@ While it is still too early to evaluate performance here are some preliminary re
 | 64 MB         | 2084               | 6.11s               | 0.50s                 | 327             |
 | 128 MB        | 4530               | 14.41s              | 1.88s                 | 594             |
 
-Again, this is just for a quick info on the computation costs as the DNS rule set contains only 4 relatively simple rules.
+
 ## Dependencies
 
 | Tool/Library    | Usage        | Homepage                                             | Licence                                |
