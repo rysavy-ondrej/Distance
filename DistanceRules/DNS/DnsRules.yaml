@@ -1,4 +1,4 @@
-- fact: DnsModel
+- fact: Dns.Model
   where: dns
   select: 
     - frame.number
@@ -13,33 +13,33 @@
 - rule: Dns.RequestResponse
   when:
     match:
-      - DnsModel query: query.dns.flags.response == 0
-      - DnsModel response: response.dns.flags.response == 1 && query.dns.id == response.dns.id
+      - Dns.Model query: query.dns.flags.response == 0
+      - Dns.Model response: response.dns.flags.response == 1 && query.dns.id == response.dns.id
   then:
-    yield: DnsQueryResponse(Query = query, Response = response)
+    yield: Dns.QueryResponse(Query = query, Response = response)
   
 - rule: Dns.ResponseError
   description: "The rule is fired for all DNS responses with error code != 0."
   when:
     match: 
-      - DnsQueryResponse qr: qr.Response.dns.flags.rcode != 0
+      - Dns.QueryResponse qr: qr.Response.dns.flags.rcode != 0
   then:  
     error: "DNS query {qr.Query} yields to error response {qr.Response}. Response time was {qr.Response.dns.time}s."
-    yield: DnsResponseError(Query = qr.Query, Response = qr.Response)
+    yield: Dns.ResponseError(Query = qr.Query, Response = qr.Response)
 
 - rule: Dns.NoResponse
   when:
     match:
-      - DnsModel query: query.dns.flags.response == 0
+      - Dns.Model query: query.dns.flags.response == 0
     not:
-      - DnsModel x: x.dns.flags.response == 1 && x.dns.id == query.dns.id
+      - Dns.Model x: x.dns.flags.response == 1 && x.dns.id == query.dns.id
   then: 
     error: "No Response for DNS query {query} found."
-    yield: DnsNoResponse(Query = query)
+    yield: Dns.NoResponse(Query = query)
 
 - rule: Dns.DelayedResponse
   when:
     match:
-      - DnsQueryResponse qr: qr.Response.dns.time > 5
+      - Dns.QueryResponse qr: qr.Response.dns.time > 5
   then:
     warn: "Response time is high ({qr.Response.dns.time}s) for DNS query {qr.Query} and response {qr.Response}."

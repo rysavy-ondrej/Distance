@@ -28,17 +28,17 @@ namespace Distance.Domain
             set => this["ip.dst"] = value;
         }
 
-        public PacketModel(IDictionary<string,object> fields)
+        protected PacketModel(IDictionary<string,object> fields)
         {
             m_fields = fields;
         }
 
-        public PacketModel(IEnumerable<KeyValuePair<string,string>> fields)
+        protected PacketModel(IEnumerable<KeyValuePair<string,string>> fields)
         {
             m_fields = fields.ToDictionary(x=> x.Key, y => (object)y.Value);
         }
 
-        public PacketModel()
+        protected PacketModel()
         {
             m_fields = new Dictionary<string, object>();
         }

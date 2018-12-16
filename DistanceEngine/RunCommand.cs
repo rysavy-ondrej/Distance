@@ -39,10 +39,10 @@ namespace Distance.Engine
         }
 
 
-        public static IEnumerable<string> ExecTShark(string inputfile, string protocol, params string[] fields)
+        public static IEnumerable<string> RunShark(string inputfile, string filter, params string[] fields)
         {
             var fieldString = String.Join(" -e ", fields);
-            var arguments = $"-r {inputfile} -Y {protocol} -T fields -e {fieldString}";
+            var arguments = $"-r {inputfile} -Y {filter} -T fields -e {fieldString}";
 
             var process = new Process()
             {
@@ -87,11 +87,22 @@ namespace Distance.Engine
             Program.ConfigureLog(logPath);
             var sw = new Stopwatch();
             sw.Start();
-            
+
+            // TODO: Turn the following block to Fact Loader implementation:
+            // Facts definitions are stored in yaml file definition.
+            //
+            // The compiler generates Domain files for facts. 
+            //
+            // To load facts we search assemblies for all facts then apply the 
+            // filter and generate loaders.
+            //
+            //
+            //
+            //
             Console.Write($"Loading and decoding packets from '{pcapPath}'...");
             var fields = DnsModel.Fields;
             var protocol = DnsModel.Protocol;
-            var dnsPackets = ExecTShark(pcapPath, protocol, fields).Select(DnsModel.CreateFromLine).ToList();
+            var dnsPackets = RunShark(pcapPath, protocol, fields).Select(DnsModel.CreateFromLine).ToList();
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
