@@ -97,7 +97,7 @@ namespace Distance.Domain
             GetMemberBinder binder, out object result)
         {
             // Converting the property name to lowercase
-            // so that property names become case-insensitive.
+            // so that property names become case-insensitive and wireshark compatible.
             string name = GetCannonicalName(binder.Name);
 
             // If the property name is found in a dictionary,
@@ -112,7 +112,7 @@ namespace Distance.Domain
             SetMemberBinder binder, object value)
         {
             // Converting the property name to lowercase
-            // so that property names become case-insensitive.
+            // so that property names become case-insensitive and wireshark compatible.
             string name = GetCannonicalName(binder.Name);
 
             m_fields[name] = value;
