@@ -17,7 +17,7 @@ namespace Distance.Rules
         /// <param name="context"></param>
         /// <param name="message"></param>
         public static void Warn(this IContext context, string message)
-        {            
+        {                  
             m_logger.Warn($"{context.Rule.Name}: {message}");
         }
 

@@ -1,20 +1,6 @@
-﻿using Distance.Domain;
-using Distance.Domain.Dns;
-using Distance.Rules;
-using Distance.Rules.Dns;
-using Distance.Shark;
-using Microsoft.Extensions.CommandLineUtils;
+﻿using Microsoft.Extensions.CommandLineUtils;
 using NLog;
-using NRules;
-using NRules.Fluent;
-using NRules.RuleModel;
-using SharpPcap;
-using SharpPcap.LibPcap;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 
 namespace Distance.Engine
 {

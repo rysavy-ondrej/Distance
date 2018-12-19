@@ -1,0 +1,56 @@
+meta:
+  namespace: Icmp
+facts:
+  - name: IcmpPacket
+    where: icmp
+    select: 
+      - int     frame.number
+      - string  ip.src
+      - string  ip.dst
+      - int     icmp.type
+      - int     icmp.code        
+      - int     icmp.ident
+      - int     icmp.seq
+rules:
+  - name: TtlExpired
+    when:
+      match:
+        - IcmpPaket packet => packet.icmp.type == 11
+    then:
+      yield: TtlExpired(packet = packet)
+
+  - name: DestinationUnreachable
+    when:
+      match: 
+        - IcmpPacket packet => packet.icmp.type == 3
+    then:
+      yield: DestinationUnreachable(packet = packet, code = packet.icmp.code)
+  
+  - name: TtlExpiredError
+    when:
+      match: 
+        - TTlExpired expired => true
+    then:
+      error: "TTL exceeded during connecting to {?}. Message was sent from {expired.packet.ip.src}."
+
+
+  - name: NetworkError
+    when:
+      match: 
+        - DestinationUnreachable unreach => unreach.code == 0
+    then:
+      error: "Destination network unreachable while connecting to {?} . Message was sent from {unreach.packet.ip.src}."
+
+  - name: HostError
+    when:
+      match: 
+        - DestinationUnreachable unreach => unreach.code == 1
+    then:
+      error: "Destination host unreachable while connecting to {?} . Message was sent from {unreach.packet.ip.src}."
+
+  - name: PortError
+    when:
+      match: 
+        - DestinationUnreachable unreach => unreach.code == 3
+    then:
+      error: "Destination {protocol} endpoint {address}:{port} unreachable. Message was sent from {unreach.packet.ip.src}."      

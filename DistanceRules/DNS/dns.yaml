@@ -1,0 +1,14 @@
+meta:
+  namespace: Dns
+facts:
+  - name: DnsPacket
+    where: dns
+    select: 
+      - int     frame.number
+      - string  ip.src
+      - string  ip.dst
+      - string  dns.id
+      - bool    dns.flags.response
+      - int     dns.flags.rcode
+      - double  dns.time
+      - string  dns.qry.name

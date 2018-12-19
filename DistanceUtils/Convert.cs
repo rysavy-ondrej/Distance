@@ -16,6 +16,20 @@ namespace Distance.Utils
             return default(T);
         }
 
+        public static bool ToBool(this string value)
+        {
+            if (bool.TryParse(value, out bool boolResult))
+            {
+                return boolResult;
+            }
+            if (int.TryParse(value, out int intResult))
+            {
+                return intResult != 0;
+            }
+            return false;
+        }
+
+
         public static int ToInt(this string value) => ToInt(value, 0);
         public static int ToInt(this string value, int defval)
         {

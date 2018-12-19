@@ -1,17 +1,13 @@
-﻿using System;
+﻿using Distance.Rules.Dns;
+using DistanceRules.ICMP;
+using Microsoft.Extensions.CommandLineUtils;
+using NRules;
+using NRules.Fluent;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Distance.Domain;
-using Distance.Domain.Dns;
-using Distance.Rules.Dns;
-using Distance.Shark;
-using Microsoft.Extensions.CommandLineUtils;
-using NRules;
-using NRules.Fluent;
-using SharpPcap;
-using SharpPcap.LibPcap;
 
 namespace Distance.Engine
 {
@@ -72,11 +68,12 @@ namespace Distance.Engine
             process.WaitForExit();
         }
 
-        public void GenerateProtocolData()
+        public static readonly Char Separator = '\t';
+
+        public IEnumerable<T> LoadFacts<T>(string pcapPath, string filter, string[]fields, Func<string[], T> creator)
         {
-
+            return RunShark(pcapPath, filter, fields).Select(arg => creator(arg.Split(Separator)));
         }
-
 
         public int AnalyzeInput(string input)
         {
@@ -100,9 +97,8 @@ namespace Distance.Engine
             //
             //
             Console.Write($"Loading and decoding packets from '{pcapPath}'...");
-            var fields = DnsModel.Fields;
-            var protocol = DnsModel.Protocol;
-            var dnsPackets = RunShark(pcapPath, protocol, fields).Select(DnsModel.CreateFromLine).ToList();
+            var dnsPackets = LoadFacts<DnsPacket>(pcapPath, DnsPacket.Filter, DnsPacket.Fields, DnsPacket.Create).ToList();
+            var icmpPackets = LoadFacts<IcmpPacket>(pcapPath, IcmpPacket.Filter, IcmpPacket.Fields, IcmpPacket.Create).ToList();
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
@@ -126,10 +122,14 @@ namespace Distance.Engine
 
 
             sw.Restart();
-            Console.Write($"Inserting facts ({dnsPackets.Count}) to the session...");
+            Console.Write($"Inserting 'DnsPacket' facts ({dnsPackets.Count}) to the session...");
             session.InsertAll(dnsPackets);
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
+            sw.Restart();
+            Console.Write($"Inserting 'IcmpPacket' facts ({icmpPackets.Count}) to the session...");
+            session.InsertAll(icmpPackets);
+            Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
             Console.Write("Waiting for completion...");
@@ -145,13 +145,5 @@ namespace Distance.Engine
             return 0;
         }
 
-        private PacketModel packetCreator(string protocols, IDictionary<string, object> fields)
-        {
-            if (protocols.Contains("dns"))
-            {
-                return new DnsModel(fields);
-            }
-            return new GenericPacketModel(fields);
-        }
     }
 }

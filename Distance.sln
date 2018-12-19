@@ -5,13 +5,11 @@ VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceRules", "DistanceRules\DistanceRules.csproj", "{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceDomain", "DistanceDomain\DistanceDomain.csproj", "{B65E2D86-167E-4E67-8AD1-95F50EFD16BD}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceEngine", "DistanceEngine\DistanceEngine.csproj", "{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistanceShark", "DistanceShark\DistanceShark.csproj", "{CB00DAF7-B10A-4AC8-AAA6-5A226933EBEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceShark", "DistanceShark\DistanceShark.csproj", "{CB00DAF7-B10A-4AC8-AAA6-5A226933EBEA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistanceUtils", "DistanceUtils\DistanceUtils.csproj", "{CD9F898B-6F41-4282-939E-5174CFDE9DA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceUtils", "DistanceUtils\DistanceUtils.csproj", "{CD9F898B-6F41-4282-939E-5174CFDE9DA4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D5A9D623-F019-4C62-BBF5-7EAE4836B3DA}"
 	ProjectSection(SolutionItems) = preProject
@@ -28,10 +26,6 @@ Global
 		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B65E2D86-167E-4E67-8AD1-95F50EFD16BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B65E2D86-167E-4E67-8AD1-95F50EFD16BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B65E2D86-167E-4E67-8AD1-95F50EFD16BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B65E2D86-167E-4E67-8AD1-95F50EFD16BD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}.Release|Any CPU.ActiveCfg = Release|Any CPU

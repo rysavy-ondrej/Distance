@@ -1,23 +1,84 @@
-﻿using Distance.Domain.Dns;
+﻿using Distance.Utils;
 using NRules.Fluent.Dsl;
-using Distance.Utils;
-using NRules.RuleModel;
-using System;
 using System.Collections.Generic;
 
 namespace Distance.Rules.Dns
 {
+    public class DnsPacket
+    {
+        public static string Filter = "dns";
+        public static string[] Fields = { "frame.number", "ip.src", "ip.dst", "dns.id", "dns.flags.response", "dns.flags.rcode", "dns.time", "dns.qry.name" };
+
+        [FieldName("frame.number")]
+        public int FrameNumber { get; set; }
+
+        [FieldName("ip.src")]
+        public string IpSrc { get; set; }
+
+        [FieldName("ip.dst")]
+        public string IpDst { get; set; }
+
+        [FieldName("dns.id")]
+        public string DnsId { get; set; }
+
+        [FieldName("dns.flags.response")]
+        public bool DnsFlagsResponse { get; set; }
+
+        [FieldName("dns.flags.rcode")]
+        public int DnsFlagsRcode { get; set; }
+
+        [FieldName("dns.time")]
+        public double DnsTime { get; set; }
+
+        [FieldName("dns.qry.name")]
+        public string DnsQryName { get; set; }
+
+        public static DnsPacket Create(string[] values)
+        {
+            return new DnsPacket
+            {
+                FrameNumber = values[0].ToInt(),
+                IpSrc = values[1].ToString(),
+                IpDst = values[2].ToString(),
+                DnsId = values[3].ToString(),
+                DnsFlagsResponse = values[4].ToBool(),
+                DnsFlagsRcode = values[5].ToInt(),
+                DnsTime = values[6].ToDouble(),
+                DnsQryName = values[7].ToString()
+            };
+        }
+    }
+
+    public class DnsQueryResponseModel
+    {
+        public DnsPacket Query { get; set; }
+        public DnsPacket Response { get; set; }
+    }
+
+    public class DnsResponseErrorModel
+    {
+        public DnsPacket Query { get; set; }
+        public DnsPacket Response { get; set; }
+    }
+
+    public class DnsNoResponseModel
+    {
+        public DnsPacket Query { get; set; }
+    }
+
+
+
     [Name("Dns.RequestResponse"), Description("The rule identifies pairs of request and response messages.")]
     public class DnsRequestResponseRule : Rule
     {
         public override void Define()
         {
-            DnsModel query = null;
-            DnsModel response = null;
+            DnsPacket query = null;
+            DnsPacket response = null;
 
             When()
-                .Match<DnsModel>(() => query, x => x.DnsFlagsResponse == "0")
-                .Match<DnsModel>(() => response, x => x.DnsFlagsResponse == "1", x => x.DnsId == query.DnsId);
+                .Match<DnsPacket>(() => query, x => x.DnsFlagsResponse == false)
+                .Match<DnsPacket>(() => response, x => x.DnsFlagsResponse == true, x => x.DnsId == query.DnsId);
 
             Then()
                 .Yield(ctx => new DnsQueryResponseModel { Query = query, Response = response });
@@ -62,10 +123,10 @@ namespace Distance.Rules.Dns
         {
             DnsQueryResponseModel qr = null;
             When()
-                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsFlagsRcode.ToInt(0) != 0);
+                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsFlagsRcode != 0);
 
             Then()
-                .Do(ctx => ctx.Error($"DNS query {qr.Query} yields to error {(DnsResponseCode)qr.Response.DnsFlagsRcode.ToInt()} ({ResponseCodeDescription[(DnsResponseCode)qr.Response.DnsFlagsRcode.ToInt()]}) . DNS response {qr.Response}. Response time was {qr.Response.DnsTime}s."))
+                .Do(ctx => ctx.Error($"DNS query {qr.Query} yields to error {(DnsResponseCode)qr.Response.DnsFlagsRcode} ({ResponseCodeDescription[(DnsResponseCode)qr.Response.DnsFlagsRcode]}) . DNS response {qr.Response}. Response time was {qr.Response.DnsTime}s."))
                 .Yield(ctx => new DnsResponseErrorModel { Query = qr.Query, Response = qr.Response });
         }
     }
@@ -76,10 +137,10 @@ namespace Distance.Rules.Dns
     {
         public override void Define()
         {
-            DnsModel query = null;
+            DnsPacket query = null;
             When()
-                .Match<DnsModel>(() => query, x => x.DnsFlagsResponse == "0")
-                .Not<DnsModel>(x => x.DnsFlagsResponse == "1", x => x.DnsId == query.DnsId);
+                .Match<DnsPacket>(() => query, x => x.DnsFlagsResponse == false)
+                .Not<DnsPacket>(x => x.DnsFlagsResponse == true, x => x.DnsId == query.DnsId);
 
             Then()
                 .Do(ctx => ctx.Error($"No Response for DNS query {query} found."))
@@ -94,7 +155,7 @@ namespace Distance.Rules.Dns
         {
             DnsQueryResponseModel qr = null;
             When()
-                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsTime.ToDouble() > 5.0);
+                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsTime > 5.0);
             Then()
                 .Do(ctx => ctx.Warn($"Response time is high ({qr.Response.DnsTime}s) for DNS query {qr.Query} and its response {qr.Response}."));
         }

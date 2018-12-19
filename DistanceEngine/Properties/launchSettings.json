@@ -1,8 +1,14 @@
 {
   "profiles": {
-    "DistanceEngine": {
+    "build icmp.yaml": {
       "commandName": "Project",
-      "commandLineArgs": "run Data\\test.pcap"
+      "commandLineArgs": "build icmp.yaml",
+      "workingDirectory": "C:\\GitHub\\Distance\\DistanceRules\\ICMP"
+    },
+    "build dns.yaml": {
+      "commandName": "Project",
+      "commandLineArgs": "build dns.yaml",
+      "workingDirectory": "C:\\GitHub\\Distance\\DistanceRules\\DNS"
     }
   }
 }
