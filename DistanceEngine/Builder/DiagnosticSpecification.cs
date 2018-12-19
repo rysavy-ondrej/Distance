@@ -3,7 +3,7 @@ using System.IO;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Distance.Engine
+namespace Distance.Engine.Builder
 {
     public static class DiagnosticSpecification
     {
