@@ -2,7 +2,7 @@
 using Distance.Utils;
 using NRules.Fluent.Dsl;
 
-namespace DistanceRules.ICMP
+namespace Distance.Rules.Icmp
 {
     public class IcmpPacket
     {

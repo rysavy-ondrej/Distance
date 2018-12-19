@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Distance.Utils;
 using static Distance.Engine.Program;
 
 namespace Distance.Engine
@@ -43,25 +44,32 @@ namespace Distance.Engine
             });
         }
 
-        TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
-
-        private string GetCSharpName(string fieldName)
+        private (string Type, string FieldName, string PropName) ParseFieldDeclaration(string declaration)
         {
-            var name2 = myTI.ToTitleCase(fieldName).Replace(".","");
-            return name2;
+            var ident = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
+            var m = Regex.Match(declaration, $"({ident})\\s+({ident})");
+            if (m.Success)
+            {
+                var type = m.Groups[1].Value;
+                var name = m.Groups[2].Value;
+                return (Type: type, FieldName: name, PropName: name.ToCamelCase());
+            }
+            else
+            {
+                throw new YamlDotNet.Core.SyntaxErrorException($"Field declaration '{declaration}' has bad format.");
+            }
         }
-
         private void CreateFactClass(DiagnosticSpecification.Fact fact)
         {
             var sb = new StringBuilder();
             var className = fact.Name;
             sb.AppendLine($"public class {className} {{");
 
-            var fieldList = fact.Select.Select(x => x.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var fieldList = fact.Select.Select(ParseFieldDeclaration);
 
-            var propDefs = fieldList.Select(x => $"    public {x[0]} {GetCSharpName(x[1])} {{ get; set; }}");
-            var metaDefs = fieldList.Select(x => $"    [FieldName(\"{x[1]}\")]");
-            var fieldStr = String.Join(',', fieldList.Select(x => $"\"{x[1]}\""));
+            var propDefs = fieldList.Select(x => $"    public {x.Type} {x.PropName} {{ get; set; }}");
+            var metaDefs = fieldList.Select(x => $"    [FieldName(\"{x.FieldName}\")]");
+            var fieldStr = String.Join(',', fieldList.Select(x => $"\"{x.FieldName}\""));
 
             sb.AppendLine($"    public static string Filter = \"{fact.Where}\";");
             sb.AppendLine($"    public static string[] Fields = {{ {fieldStr} }};");            
@@ -72,7 +80,7 @@ namespace Distance.Engine
 
             sb.AppendLine($"    public static {className} Create(string []values) {{");
             sb.AppendLine($"        return new {className} {{");
-            sb.AppendLine(String.Join(",\n", fieldList.Select((x, i) => $"             {GetCSharpName(x[1])} = values[{i}].To{GetCSharpName(x[0])}()")));
+            sb.AppendLine(String.Join(",\n", fieldList.Select((x, i) => $"             {x.PropName} = values[{i}].To{x.Type.ToCamelCase()}()")));
             sb.AppendLine($"        }};");
             sb.AppendLine("     }");
             sb.AppendLine("}");

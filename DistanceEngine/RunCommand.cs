@@ -1,5 +1,5 @@
 ﻿using Distance.Rules.Dns;
-using DistanceRules.ICMP;
+using Distance.Rules.Icmp;
 using Microsoft.Extensions.CommandLineUtils;
 using NRules;
 using NRules.Fluent;
