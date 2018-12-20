@@ -127,32 +127,32 @@ namespace Distance.Engine.Builder
             }
 
             enum FieldType { Bool, Int, Long, Float, Double, String };
-            private static Type GetFieldType(FieldType ftype)
+            private static Type GetSystemType(FieldType fieldType)
             {
-                switch (ftype)
+                switch (fieldType)
                 {
-                    case FieldType.Bool: return typeof(bool);
-                    case FieldType.Float: return typeof(float);                    
-                    case FieldType.Double: return typeof(double);
-                    case FieldType.Int: return typeof(int);
-                    case FieldType.Long: return typeof(long);
-                    case FieldType.String: return typeof(string);
+                    case FieldType.Bool:    return typeof(bool);
+                    case FieldType.Float:   return typeof(float);                    
+                    case FieldType.Double:  return typeof(double);
+                    case FieldType.Int:     return typeof(int);
+                    case FieldType.Long:    return typeof(long);
+                    case FieldType.String:  return typeof(string);
                 }
                 throw new ArgumentException("Invalid type specified.");
             }
 
             private static Field ParseFieldDeclaration(string declaration)
             {
-                var ident = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
-                var pattern = $"({ident})\\s+({ident})";
-                var m = Regex.Match(declaration, pattern);
-                if (m.Success)
+                var identifier = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
+                var pattern = $"({identifier})\\s+({identifier})";
+                var match = Regex.Match(declaration, pattern);
+                if (match.Success)
                 {
-                    var type = m.Groups[1].Value;
-                    var name = m.Groups[2].Value;
-                    if (Enum.TryParse<FieldType>(type, true, out var ftype))
+                    var type = match.Groups[1].Value;
+                    var name = match.Groups[2].Value;
+                    if (Enum.TryParse<FieldType>(type, true, out var fieldType))
                     {
-                        return new Field { FieldName = name, FieldType = GetFieldType(ftype) };
+                        return new Field { FieldName = name, FieldType = GetSystemType(fieldType) };
                     }
                     else
                     {
