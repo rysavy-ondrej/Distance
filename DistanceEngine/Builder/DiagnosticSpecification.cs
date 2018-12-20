@@ -63,8 +63,8 @@ namespace Distance.Engine.Builder
         }
         public class When
         {
-            public List<IExpression> Match { get; set; }
-            public List<IExpression> Not { get; set; }
+            public List<Expression> Match { get; set; }
+            public List<Expression> Not { get; set; }
         }
         public class Then
         {
@@ -77,7 +77,7 @@ namespace Distance.Engine.Builder
 
         internal class LambdaExpressionConverter : IYamlTypeConverter
         {
-            private static readonly Type m_lambdaExpressionType = typeof(IExpression);
+            private static readonly Type m_lambdaExpressionType = typeof(Expression);
             public bool Accepts(Type type)
             {
                 return type == m_lambdaExpressionType;

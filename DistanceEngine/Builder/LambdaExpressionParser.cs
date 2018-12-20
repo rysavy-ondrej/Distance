@@ -1,15 +1,12 @@
-﻿    using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Text;
-using Pidgin;
+﻿using Pidgin;
 using Pidgin.Expression;
+using System;
+using System.Collections.Immutable;
 using static Pidgin.Parser;
-using static Pidgin.Parser<char>;
 
 namespace Distance.Engine.Builder
 {
-    public static class ExprParser
+    public static class LambdaExpressionParser
     {
         private static Parser<char, T> Token<T>(Parser<char, T> token)
             => Try(token).Before(SkipWhitespaces);
@@ -23,26 +20,26 @@ namespace Distance.Engine.Builder
         public static Parser<char, string> StrConstant 
             => AnyCharExcept('"').ManyString().Between(Token("\""), Token("\""));
 
-        private static Parser<char, Func<IExpression, IExpression, IExpression>> Binary(Parser<char, BinaryOperatorType> op)
-            => op.Select<Func<IExpression, IExpression, IExpression>>(type => (l, r) => new BinaryOp(type, l, r));
+        private static Parser<char, Func<Expression, Expression, Expression>> Binary(Parser<char, BinaryOperatorType> op)
+            => op.Select<Func<Expression, Expression, Expression>>(type => (l, r) => new BinaryOp(type, l, r));
 
-        private static Parser<char, Func<IExpression, IExpression>> Unary(Parser<char, UnaryOperatorType> op)
-            => op.Select<Func<IExpression, IExpression>>(type => o => new UnaryOp(type, o));
+        private static Parser<char, Func<Expression, Expression>> Unary(Parser<char, UnaryOperatorType> op)
+            => op.Select<Func<Expression, Expression>>(type => o => new UnaryOp(type, o));
 
         #region Binary Artihmetic Operations
-        private static readonly Parser<char, Func<IExpression, IExpression, IExpression>> Add
+        private static readonly Parser<char, Func<Expression, Expression, Expression>> Add
             = Binary(Token("+").ThenReturn(BinaryOperatorType.Add));
 
-        private static readonly Parser<char, Func<IExpression, IExpression, IExpression>> Subtract
+        private static readonly Parser<char, Func<Expression, Expression, Expression>> Subtract
             = Binary(Token("-").ThenReturn(BinaryOperatorType.Add));
 
-        private static readonly Parser<char, Func<IExpression, IExpression, IExpression>> Multiply
+        private static readonly Parser<char, Func<Expression, Expression, Expression>> Multiply
             = Binary(Token("*").ThenReturn(BinaryOperatorType.Mul));
 
-        private static readonly Parser<char, Func<IExpression, IExpression, IExpression>> Divide
+        private static readonly Parser<char, Func<Expression, Expression, Expression>> Divide
             = Binary(Token("/").ThenReturn(BinaryOperatorType.Mul));
 
-        private static readonly Parser<char, Func<IExpression, IExpression, IExpression>> Modulo
+        private static readonly Parser<char, Func<Expression, Expression, Expression>> Modulo
             = Binary(Token("%").ThenReturn(BinaryOperatorType.Mul));
 
         #endregion
@@ -70,36 +67,36 @@ namespace Distance.Engine.Builder
         #endregion
 
         #region Unary Operators
-        private static readonly Parser<char, Func<IExpression, IExpression>> Negate
+        private static readonly Parser<char, Func<Expression, Expression>> Negate
             = Unary(Token("-").ThenReturn(UnaryOperatorType.Negate));
 
-        private static readonly Parser<char, Func<IExpression, IExpression>> Complement
+        private static readonly Parser<char, Func<Expression, Expression>> Complement
             = Unary(Token("~").ThenReturn(UnaryOperatorType.Complement));
 
-        private static readonly Parser<char, Func<IExpression, IExpression>> Not
+        private static readonly Parser<char, Func<Expression, Expression>> Not
             = Unary(Token("!").ThenReturn(UnaryOperatorType.Not));
 
         #endregion
 
-        private static readonly Parser<char, IExpression> Identifier
+        private static readonly Parser<char, Expression> Identifier
             = Token(Letter.Then(LetterOrDigit.Or(Char('.')).ManyString(), (h, t) => h + t))
-                .Select<IExpression>(name => new Identifier(name))
+                .Select<Expression>(name => new Identifier(name))
                 .Labelled("identifier");
 
-        private static readonly Parser<char, IExpression> IntegerLiteral
+        private static readonly Parser<char, Expression> IntegerLiteral
             = Token(Num)
-                .Select<IExpression>(value => new Literal<int>(value))
+                .Select<Expression>(value => new Literal<int>(value))
                 .Labelled("integer literal");
 
-        private static readonly Parser<char, IExpression> StringLiteral
+        private static readonly Parser<char, Expression> StringLiteral
             = Token(StrConstant)
-                .Select<IExpression>(value => new Literal<string>(value))
+                .Select<Expression>(value => new Literal<string>(value))
                 .Labelled("string literal");
 
 
-        private static Parser<char, IExpression> BuildExpressionParser()
+        private static Parser<char, Expression> BuildExpressionParser()
         {
-            Parser<char, IExpression> expr = null;
+            Parser<char, Expression> expr = null;
 
             var term = OneOf(
                 Identifier,
@@ -108,7 +105,7 @@ namespace Distance.Engine.Builder
             );
 
             var call = Parenthesised(Rec(() => expr).Separated(Token(",")))
-                .Select<Func<IExpression, IExpression>>(args => method => new Call(method, args.ToImmutableArray()))
+                .Select<Func<Expression, Expression>>(args => method => new Call(method, args.ToImmutableArray()))
                 .Labelled("function call");
 
             expr = ExpressionParser.Build(
@@ -125,11 +122,9 @@ namespace Distance.Engine.Builder
             return expr;
         }
 
-        private static readonly Parser<char, IExpression> Expr = BuildExpressionParser();
+        private static readonly Parser<char, Expression> m_expression = BuildExpressionParser();
 
-        
-
-        public static IExpression ParseOrThrow(string input)
-            => Expr.ParseOrThrow(input);
+        public static Expression ParseOrThrow(string input)
+            => m_expression.ParseOrThrow(input);
     }
 }

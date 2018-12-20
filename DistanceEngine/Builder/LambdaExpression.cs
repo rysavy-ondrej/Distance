@@ -6,11 +6,12 @@ using System.Text;
 
 namespace Distance.Engine.Builder
 {
-    public interface IExpression : IEquatable<IExpression>
+    public abstract class Expression : IEquatable<Expression>
     {
+        public abstract bool Equals(Expression other);
     }
 
-    public class Identifier : IExpression
+    public class Identifier : Expression
     {
         public string Name { get; }
 
@@ -19,11 +20,11 @@ namespace Distance.Engine.Builder
             Name = name;
         }
 
-        public bool Equals(IExpression other)
+        public override bool Equals(Expression other)
             => other is Identifier i && this.Name == i.Name;
     }
 
-    public class Literal<T> : IExpression where T : IEquatable<T>
+    public class Literal<T> : Expression where T : IEquatable<T>
     {
         public T Value { get; }
 
@@ -32,22 +33,22 @@ namespace Distance.Engine.Builder
             Value = value;
         }
 
-        public bool Equals(IExpression other)
+        public override bool Equals(Expression other)
             => other is Literal<T> l && this.Value.Equals(l.Value);
     }
 
-    public class Call : IExpression
+    public class Call : Expression
     {
-        public IExpression Expr { get; }
-        public ImmutableArray<IExpression> Arguments { get; }
+        public Expression Expr { get; }
+        public ImmutableArray<Expression> Arguments { get; }
 
-        public Call(IExpression expr, ImmutableArray<IExpression> arguments)
+        public Call(Expression expr, ImmutableArray<Expression> arguments)
         {
             Expr = expr;
             Arguments = arguments;
         }
 
-        public bool Equals(IExpression other)
+        public override bool Equals(Expression other)
             => other is Call c
             && this.Expr.Equals(c.Expr)
             && this.Arguments.SequenceEqual(c.Arguments);
@@ -59,18 +60,18 @@ namespace Distance.Engine.Builder
         Complement,
         Not
     }
-    public class UnaryOp : IExpression
+    public class UnaryOp : Expression
     {
         public UnaryOperatorType Type { get; }
-        public IExpression Expr { get; }
+        public Expression Expr { get; }
 
-        public UnaryOp(UnaryOperatorType type, IExpression expr)
+        public UnaryOp(UnaryOperatorType type, Expression expr)
         {
             Type = type;
             Expr = expr;
         }
 
-        public bool Equals(IExpression other)
+        public override bool Equals(Expression other)
             => other is UnaryOp u
             && this.Type == u.Type
             && this.Expr.Equals(u.Expr);
@@ -81,20 +82,20 @@ namespace Distance.Engine.Builder
         Add,
         Mul
     }
-    public class BinaryOp : IExpression
+    public class BinaryOp : Expression
     {
         public BinaryOperatorType Type { get; }
-        public IExpression Left { get; }
-        public IExpression Right { get; }
+        public Expression Left { get; }
+        public Expression Right { get; }
 
-        public BinaryOp(BinaryOperatorType type, IExpression left, IExpression right)
+        public BinaryOp(BinaryOperatorType type, Expression left, Expression right)
         {
             Type = type;
             Left = left;
             Right = right;
         }
 
-        public bool Equals(IExpression other)
+        public override bool Equals(Expression other)
             => other is BinaryOp b
             && this.Type == b.Type
             && this.Left.Equals(b.Left)
