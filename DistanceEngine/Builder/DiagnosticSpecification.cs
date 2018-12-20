@@ -149,8 +149,14 @@ namespace Distance.Engine.Builder
                 {
                     var type = m.Groups[1].Value;
                     var name = m.Groups[2].Value;
-                    Enum.TryParse<FieldType>(type, true, out var ftype);
-                    return new Field { FieldName = name, FieldType = GetFieldType(ftype) };
+                    if (Enum.TryParse<FieldType>(type, true, out var ftype))
+                    {
+                        return new Field { FieldName = name, FieldType = GetFieldType(ftype) };
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid or unknown type specified: '{type}'.");
+                    }
                 }
                 else
                 {
