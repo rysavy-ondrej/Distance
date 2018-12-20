@@ -144,7 +144,8 @@ namespace Distance.Engine.Builder
             private static Field ParseFieldDeclaration(string declaration)
             {
                 var ident = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
-                var m = Regex.Match(declaration, $"({ident})\\s+({ident})");
+                var pattern = $"({ident})\\s+({ident})";
+                var m = Regex.Match(declaration, pattern);
                 if (m.Success)
                 {
                     var type = m.Groups[1].Value;
