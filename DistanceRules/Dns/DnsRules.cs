@@ -37,12 +37,12 @@ namespace Distance.Rules.Dns
         {
             return new DnsPacket
             {
-                FrameNumber = values[0].ToInt(),
+                FrameNumber = values[0].ToInt32(),
                 IpSrc = values[1].ToString(),
                 IpDst = values[2].ToString(),
                 DnsId = values[3].ToString(),
-                DnsFlagsResponse = values[4].ToBool(),
-                DnsFlagsRcode = values[5].ToInt(),
+                DnsFlagsResponse = values[4].ToBoolean(),
+                DnsFlagsRcode = values[5].ToInt32(),
                 DnsTime = values[6].ToDouble(),
                 DnsQryName = values[7].ToString()
             };

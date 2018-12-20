@@ -1,5 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.CodeAnalysis.Scripting;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -13,6 +19,8 @@ namespace Distance.Engine.Builder
 
             var deserializer = new DeserializerBuilder()
                 .WithNamingConvention(new CamelCaseNamingConvention())
+                .WithTypeConverter(new FieldTypeConverter())
+                .WithTypeConverter(new LambdaExpressionConverter())
                 .Build();
 
             var module = deserializer.Deserialize<Module>(input);
@@ -38,7 +46,13 @@ namespace Distance.Engine.Builder
         {
             public string Name { get; set; }
             public string Where { get; set; }
-            public List<string> Select { get; set; }
+            public List<Field> Select { get; set; }
+        }
+
+        public class Field
+        {
+            public Type FieldType { get; set; }
+            public string FieldName { get; set; }
         }
 
         public class Rule
@@ -49,8 +63,8 @@ namespace Distance.Engine.Builder
         }
         public class When
         {
-            public List<string> Match { get; set; }
-            public List<string> Not { get; set; }
+            public List<IExpression> Match { get; set; }
+            public List<IExpression> Not { get; set; }
         }
         public class Then
         {
@@ -58,6 +72,91 @@ namespace Distance.Engine.Builder
             public string Error { get; set; }
             public string Warn { get; set; }
             public string Info { get; set; }
+        }
+
+
+        internal class LambdaExpressionConverter : IYamlTypeConverter
+        {
+            private static readonly Type m_lambdaExpressionType = typeof(IExpression);
+            public bool Accepts(Type type)
+            {
+                return type == m_lambdaExpressionType;
+            }
+
+            public object ReadYaml(IParser parser, Type type)
+            {
+                
+                return null;
+            }
+
+            public void WriteYaml(IEmitter emitter, object value, Type type)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        internal class FieldTypeConverter : IYamlTypeConverter
+        {
+            private static readonly Type m_fieldType = typeof(Field);
+            public bool Accepts(Type type)
+            {
+                return type == m_fieldType;
+            }
+
+            public object ReadYaml(IParser parser, Type type)
+            {
+                try
+                {
+                    var scalar = parser.Current as Scalar;                    
+                    if (!Accepts(type) || scalar == null)
+                    {
+                        throw new InvalidDataException("Invalid YAML content.");
+                    }
+                    parser.MoveNext();
+                    return ParseFieldDeclaration(scalar.Value);
+                }
+                catch(Exception e)
+                {
+                    throw new YamlDotNet.Core.SyntaxErrorException(parser.Current.Start, parser.Current.End, e.Message);
+                }
+            }
+
+            public void WriteYaml(IEmitter emitter, object value, Type type)
+            {
+                throw new NotImplementedException();
+            }
+
+            enum FieldType { Bool, Int, Long, Float, Double, String };
+            private static Type GetFieldType(FieldType ftype)
+            {
+                switch (ftype)
+                {
+                    case FieldType.Bool: return typeof(bool);
+                    case FieldType.Float: return typeof(float);                    
+                    case FieldType.Double: return typeof(double);
+                    case FieldType.Int: return typeof(int);
+                    case FieldType.Long: return typeof(long);
+                    case FieldType.String: return typeof(string);
+                }
+                throw new ArgumentException("Invalid type specified.");
+            }
+
+            private static Field ParseFieldDeclaration(string declaration)
+            {
+                var ident = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
+                var m = Regex.Match(declaration, $"({ident})\\s+({ident})");
+                if (m.Success)
+                {
+                    var type = m.Groups[1].Value;
+                    var name = m.Groups[2].Value;
+                    Enum.TryParse<FieldType>(type, true, out var ftype);
+                    return new Field { FieldName = name, FieldType = GetFieldType(ftype) };
+                }
+                else
+                {
+                    throw new ArgumentException($"Syntax error in field declaration '{declaration}'.");
+                }
+            }
         }
     }
 }

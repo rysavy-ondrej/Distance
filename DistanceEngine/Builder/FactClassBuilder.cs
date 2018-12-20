@@ -19,20 +19,9 @@ namespace Distance.Engine.Builder
             return GetClassAsString(m_fact.Name, m_fact.Where, GetFields(m_fact));
         }
 
-        private (string Type, string FieldName, string PropName) ParseFieldDeclaration(string declaration)
+        private (string Type, string FieldName, string PropName) ParseFieldDeclaration(DiagnosticSpecification.Field fieldDeclaration)
         {
-            var ident = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
-            var m = Regex.Match(declaration, $"({ident})\\s+({ident})");
-            if (m.Success)
-            {
-                var type = m.Groups[1].Value;
-                var name = m.Groups[2].Value;
-                return (Type: type, FieldName: name, PropName: name.ToCamelCase());
-            }
-            else
-            {
-                throw new YamlDotNet.Core.SyntaxErrorException($"Field declaration '{declaration}' has bad format.");
-            }
+            return (fieldDeclaration.FieldType.Name, fieldDeclaration.FieldName, fieldDeclaration.FieldName.ToCamelCase());
         }
 
         private List<(string Type, string FieldName, string PropName)> GetFields(DiagnosticSpecification.Fact fact)

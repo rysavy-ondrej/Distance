@@ -34,13 +34,13 @@ namespace Distance.Rules.Icmp
         {
             return new IcmpPacket
             {
-                FrameNumber = values[0].ToInt(),
+                FrameNumber = values[0].ToInt32(),
                 IpSrc = values[1].ToString(),
                 IpDst = values[2].ToString(),
-                IcmpType = values[3].ToInt(),
-                IcmpCode = values[4].ToInt(),
-                IcmpIdent = values[5].ToInt(),
-                IcmpSeq = values[6].ToInt()
+                IcmpType = values[3].ToInt32(),
+                IcmpCode = values[4].ToInt32(),
+                IcmpIdent = values[5].ToInt32(),
+                IcmpSeq = values[6].ToInt32()
             };
         }
     }
