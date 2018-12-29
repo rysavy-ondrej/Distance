@@ -33,6 +33,11 @@ namespace Distance.Rules.Dns
         [FieldName("dns.qry.name")]
         public string DnsQryName { get; set; }
 
+        public override string ToString()
+        {
+            return $"[DnsPacket frame.number={FrameNumber} ip.src={IpSrc} ip.dst={IpDst} dns.id={DnsId} dns.flags.response={DnsFlagsResponse} dns.flags.rcode={DnsFlagsRcode} dns.time={DnsTime} dns.qry.name={DnsQryName}]";
+        }
+
         public static DnsPacket Create(string[] values)
         {
             return new DnsPacket
@@ -51,19 +56,37 @@ namespace Distance.Rules.Dns
 
     public class DnsQueryResponseModel
     {
+        [FieldName("query")]
         public DnsPacket Query { get; set; }
+        [FieldName("response")]
         public DnsPacket Response { get; set; }
+
+        public override string ToString()
+        {
+            return $"[QueryResponse query={Query} response={Response}]";
+        }
     }
 
     public class DnsResponseErrorModel
     {
+        [FieldName("query")]
         public DnsPacket Query { get; set; }
+        [FieldName("response")]
         public DnsPacket Response { get; set; }
+        public override string ToString()
+        {
+            return $"[ResponseError query={Query} response={Response}]";
+        }
     }
 
     public class DnsNoResponseModel
     {
+        [FieldName("query")]
         public DnsPacket Query { get; set; }
+        public override string ToString()
+        {
+            return $"[NoResponse query={Query}]";
+        }
     }
 
 
