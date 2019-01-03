@@ -9,6 +9,11 @@
       "commandName": "Project",
       "commandLineArgs": "build dns.yaml",
       "workingDirectory": "C:\\GitHub\\Distance\\DistanceRules\\DNS"
+    },
+    "run tests.pcap": {
+      "commandName": "Project",
+      "commandLineArgs": "run test.pcap",
+      "workingDirectory": "C:\\GitHub\\Distance\\DistanceEngine\\Data"
     }
   }
 }

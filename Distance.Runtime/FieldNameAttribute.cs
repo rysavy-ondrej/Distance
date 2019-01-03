@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Distance.Rules
+namespace Distance.Runtime
 {
-    internal class FieldNameAttribute : Attribute
+    public class FieldNameAttribute : Attribute
     {
         private readonly string m_value;
 

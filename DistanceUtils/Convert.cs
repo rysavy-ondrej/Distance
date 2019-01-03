@@ -16,6 +16,7 @@ namespace Distance.Utils
             return default(T);
         }
 
+        public static bool ToBool(this string value) => ToBoolean(value);
         public static bool ToBoolean(this string value)
         {
             if (bool.TryParse(value, out bool boolResult))
@@ -29,6 +30,7 @@ namespace Distance.Utils
             return false;
         }
 
+        public static int ToInt(this string value) => ToInt32(value, 0);
         public static int ToInt32(this string value) => ToInt32(value, 0);
         public static int ToInt32(this string value, int defval)
         {

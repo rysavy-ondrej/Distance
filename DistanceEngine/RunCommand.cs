@@ -1,5 +1,5 @@
-﻿using Distance.Rules.Dns;
-using Distance.Rules.Icmp;
+﻿using Distance.Diagnostics.Dns;
+using Distance.Diagnostics.Icmp;
 using Microsoft.Extensions.CommandLineUtils;
 using NRules;
 using NRules.Fluent;
@@ -80,6 +80,7 @@ namespace Distance.Engine
             if (!File.Exists(input)) throw new ArgumentException($"File '{input}' does not exist.");
             var pcapPath = Path.GetFullPath(input);
             var logPath = Path.ChangeExtension(pcapPath, "log");
+            if (File.Exists(logPath)) File.Delete(logPath);
 
             Program.ConfigureLog(logPath);
             var sw = new Stopwatch();

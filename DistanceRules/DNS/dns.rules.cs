@@ -1,95 +1,22 @@
-﻿using Distance.Utils;
+﻿using Distance.Runtime;
+using Distance.Utils;
 using NRules.Fluent.Dsl;
 using System.Collections.Generic;
 
-namespace Distance.Rules.Dns
+namespace Distance.Diagnostics.Dns
 {
-    public class DnsPacket
+
+    public class CollectDnsServerRule : Rule
     {
-        public static string Filter = "dns";
-        public static string[] Fields = { "frame.number", "ip.src", "ip.dst", "dns.id", "dns.flags.response", "dns.flags.rcode", "dns.time", "dns.qry.name" };
-
-        [FieldName("frame.number")]
-        public int FrameNumber { get; set; }
-
-        [FieldName("ip.src")]
-        public string IpSrc { get; set; }
-
-        [FieldName("ip.dst")]
-        public string IpDst { get; set; }
-
-        [FieldName("dns.id")]
-        public string DnsId { get; set; }
-
-        [FieldName("dns.flags.response")]
-        public bool DnsFlagsResponse { get; set; }
-
-        [FieldName("dns.flags.rcode")]
-        public int DnsFlagsRcode { get; set; }
-
-        [FieldName("dns.time")]
-        public double DnsTime { get; set; }
-
-        [FieldName("dns.qry.name")]
-        public string DnsQryName { get; set; }
-
-        public override string ToString()
+        public override void Define()
         {
-            return $"[DnsPacket frame.number={FrameNumber} ip.src={IpSrc} ip.dst={IpDst} dns.id={DnsId} dns.flags.response={DnsFlagsResponse} dns.flags.rcode={DnsFlagsRcode} dns.time={DnsTime} dns.qry.name={DnsQryName}]";
-        }
-
-        public static DnsPacket Create(string[] values)
-        {
-            return new DnsPacket
-            {
-                FrameNumber = values[0].ToInt32(),
-                IpSrc = values[1].ToString(),
-                IpDst = values[2].ToString(),
-                DnsId = values[3].ToString(),
-                DnsFlagsResponse = values[4].ToBoolean(),
-                DnsFlagsRcode = values[5].ToInt32(),
-                DnsTime = values[6].ToDouble(),
-                DnsQryName = values[7].ToString()
-            };
+            DnsPacket query = null;
+            When()
+                .Match(() => query, x => x.DnsFlagsResponse == false);
+            Then()                    
+                .Do(ctx  => ctx.TryInsert(new DnsServer { IpAddress = query.IpDst }));
         }
     }
-
-    public class DnsQueryResponseModel
-    {
-        [FieldName("query")]
-        public DnsPacket Query { get; set; }
-        [FieldName("response")]
-        public DnsPacket Response { get; set; }
-
-        public override string ToString()
-        {
-            return $"[QueryResponse query={Query} response={Response}]";
-        }
-    }
-
-    public class DnsResponseErrorModel
-    {
-        [FieldName("query")]
-        public DnsPacket Query { get; set; }
-        [FieldName("response")]
-        public DnsPacket Response { get; set; }
-        public override string ToString()
-        {
-            return $"[ResponseError query={Query} response={Response}]";
-        }
-    }
-
-    public class DnsNoResponseModel
-    {
-        [FieldName("query")]
-        public DnsPacket Query { get; set; }
-        public override string ToString()
-        {
-            return $"[NoResponse query={Query}]";
-        }
-    }
-
-
 
     [Name("Dns.RequestResponse"), Description("The rule identifies pairs of request and response messages.")]
     public class DnsRequestResponseRule : Rule
@@ -104,7 +31,7 @@ namespace Distance.Rules.Dns
                 .Match<DnsPacket>(() => response, x => x.DnsFlagsResponse == true, x => x.DnsId == query.DnsId);
 
             Then()
-                .Yield(ctx => new DnsQueryResponseModel { Query = query, Response = response });
+                .Do(ctx => ctx.TryInsert(new QueryResponse { Query = query, Response = response }));
         }
     }
 
@@ -144,13 +71,13 @@ namespace Distance.Rules.Dns
 
         public override void Define()
         {
-            DnsQueryResponseModel qr = null;
+            QueryResponse qr = null;
             When()
-                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsFlagsRcode != 0);
+                .Match<QueryResponse>(() => qr, x => x.Response.DnsFlagsRcode != 0);
 
             Then()
                 .Do(ctx => ctx.Error($"DNS query {qr.Query} yields to error {(DnsResponseCode)qr.Response.DnsFlagsRcode} ({ResponseCodeDescription[(DnsResponseCode)qr.Response.DnsFlagsRcode]}) . DNS response {qr.Response}. Response time was {qr.Response.DnsTime}s."))
-                .Yield(ctx => new DnsResponseErrorModel { Query = qr.Query, Response = qr.Response });
+                .Yield(ctx => new ResponseError { Query = qr.Query, Response = qr.Response });
         }
     }
 
@@ -167,7 +94,7 @@ namespace Distance.Rules.Dns
 
             Then()
                 .Do(ctx => ctx.Error($"No Response for DNS query {query} found."))
-                .Yield(_ => new DnsNoResponseModel { Query = query });
+                .Yield(_ => new NoResponse { Query = query });
         }
     }
 
@@ -176,12 +103,26 @@ namespace Distance.Rules.Dns
     {
         public override void Define()
         {
-            DnsQueryResponseModel qr = null;
+            QueryResponse qr = null;
             When()
-                .Match<DnsQueryResponseModel>(() => qr, x => x.Response.DnsTime > 5.0);
+                .Match(() => qr, x => x.Response.DnsTime > 5.0);
             Then()
-                .Do(ctx => ctx.Warn($"Response time is high ({qr.Response.DnsTime}s) for DNS query {qr.Query} and its response {qr.Response}."));
+                .Do(ctx => ctx.Warn($"Response time is high ({qr.Response.DnsTime}s) for DNS query {qr.Query} and its response {qr.Response}."))
+                .Yield(_ => new LateResponse { Query = qr.Query, Response=qr.Response, Delay = qr.Response.DnsTime });
         }
     }
+    
+    public class ServerUnresponsive : Rule
+    {
+        public override void Define()
+        {
+            DnsServer server = null;
+            When()
+                .Match(() => server);
+      //          .Not<DnsQueryResponse>(other => server.IpAddress == other.Query.IpDst);
+            Then()
+                .Do(ctx => ctx.Error($"Dns server {server.IpAddress} does not response to any query. Either the DNS server {server.IpAddress} does not exists or it is down."));
+        }
+    } 
 }
  

@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using Distance.Utils;
 using static Distance.Engine.Program;
 using Distance.Engine.Builder;
+using System.IO;
+using System.CodeDom.Compiler;
 
 namespace Distance.Engine
 {
@@ -32,16 +34,16 @@ namespace Distance.Engine
 
             command.OnExecute(() =>
             {
-                var module = DiagnosticSpecification.DeserializeDocument(sourceProject.Value);
+                var inpath = sourceProject.Value;
+                var outpath = Path.ChangeExtension(inpath, "gen.cs");
+                var module = DiagnosticSpecification.DeserializeDocument(inpath);
+                var moduleBuilder = new ModuleBuilder(module);
 
-                // generate fact classes:
-
-                foreach (var fact in module.Facts)
+                using (var writer = new IndentedTextWriter(new StreamWriter(outpath)))
                 {
-                    var fcb = new FactClassBuilder(fact);
-                    var factClassString = fcb.ToString();
-                }
-
+                    moduleBuilder.Emit(writer);
+                    writer.Flush();
+                }                
                 return 0;
             });
         }

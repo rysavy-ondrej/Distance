@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 
-namespace Distance.Rules
+namespace Distance.Runtime
 {
     public static class Context
     {

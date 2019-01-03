@@ -1,5 +1,5 @@
 meta:
-  namespace: Icmp
+  namespace: Distance.Diagnostics.Icmp
 facts:
   - name: IcmpPacket
     where: icmp
@@ -11,6 +11,15 @@ facts:
       - int     icmp.code        
       - int     icmp.ident
       - int     icmp.seq
+derived:
+  - name: IcmpDestinationUnreachable
+    fields: 
+      - IcmpPacket  packet
+      - int         code
+  - name: TtlExpired
+    fields:
+      - IcmpPacket  packet
+
 rules:
   - name: TtlExpired
     when:

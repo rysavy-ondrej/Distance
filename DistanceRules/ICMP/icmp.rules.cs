@@ -1,61 +1,8 @@
-﻿using Distance.Rules;
-using Distance.Utils;
+﻿using Distance.Runtime;
 using NRules.Fluent.Dsl;
 
-namespace Distance.Rules.Icmp
+namespace Distance.Diagnostics.Icmp
 {
-    public class IcmpPacket
-    {
-        public static string Filter = "icmp";
-        public static string[] Fields = { "frame.number", "ip.src", "ip.dst", "icmp.type", "icmp.code", "icmp.ident", "icmp.seq" };
-
-        [FieldName("frame.number")]
-        public int FrameNumber { get; set; }
-
-        [FieldName("ip.src")]
-        public string IpSrc { get; set; }
-
-        [FieldName("ip.dst")]
-        public string IpDst { get; set; }
-
-        [FieldName("icmp.type")]
-        public int IcmpType { get; set; }
-
-        [FieldName("icmp.code")]
-        public int IcmpCode { get; set; }
-
-        [FieldName("icmp.ident")]
-        public int IcmpIdent { get; set; }
-
-        [FieldName("icmp.seq")]
-        public int IcmpSeq { get; set; }
-
-        public static IcmpPacket Create(string[] values)
-        {
-            return new IcmpPacket
-            {
-                FrameNumber = values[0].ToInt32(),
-                IpSrc = values[1].ToString(),
-                IpDst = values[2].ToString(),
-                IcmpType = values[3].ToInt32(),
-                IcmpCode = values[4].ToInt32(),
-                IcmpIdent = values[5].ToInt32(),
-                IcmpSeq = values[6].ToInt32()
-            };
-        }
-    }
-    public class IcmpDestinationUnreachable
-    {
-        public IcmpPacket Packet { get; set; }
-        public int Code { get; set; }
-    }
-
-    public class IcmpTtlExpired
-    {
-        public IcmpPacket Packet { get; set; }
-    }
-
-
     public class TtlExpiredRule : Rule
     {
         public override void Define()
@@ -65,7 +12,7 @@ namespace Distance.Rules.Icmp
                 .Match(() => packet, p => p.IcmpType == 11);
 
             Then()
-                .Yield(ctx => new IcmpTtlExpired { Packet = packet });
+                .Yield(ctx => new TtlExpired { Packet = packet });
         }
     }
 
@@ -86,7 +33,7 @@ namespace Distance.Rules.Icmp
     {
         public override void Define()
         {
-            IcmpTtlExpired expired = null;
+            TtlExpired expired = null;
             When()
                  .Match(() => expired);
             Then()
