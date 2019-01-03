@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,46 +9,33 @@ namespace Distance.Engine.Builder
 {
     public class ModuleBuilder
     {
-        private DiagnosticSpecification.Module module;
+        private DiagnosticSpecification.Module m_module;
+        private CodeCompileUnit m_compileUnit;
+        private CodeNamespace m_codeNamespace;
 
         public ModuleBuilder(DiagnosticSpecification.Module module)
         {
-            this.module = module;
+            this.m_module = module;
+            m_compileUnit = new CodeCompileUnit();
+            m_codeNamespace = new CodeNamespace(m_module.Meta.Namespace);
+            m_compileUnit.Namespaces.Add(m_codeNamespace);
+
+            m_codeNamespace.Imports.Add(new CodeNamespaceImport("Distance.Runtime"));
+            m_codeNamespace.Imports.Add(new CodeNamespaceImport("Distance.Utils"));
+
+            foreach (var fact in m_module.Facts)
+            {
+                var builder = new FactClassBuilder(fact);
+                m_codeNamespace.Types.Add(builder.TypeDeclaration);
+            }
+            foreach(var derived in m_module.Derived)
+            {
+                var builder = new DerivedClassBuilder(derived);
+                m_codeNamespace.Types.Add(builder.TypeDclaration);
+            }
+            
         }
 
-        public void EmitPrologue(IndentedTextWriter writer)
-        {
-            writer.WriteLine("using System;");
-            writer.WriteLine("using Distance.Runtime;");
-            writer.WriteLine("using Distance.Utils;");
-            writer.WriteLine($"namespace {module.Meta.Namespace}");
-            writer.WriteLine("{");
-            writer.Indent += 1;
-        }
-
-        public void EmitEpilogue(IndentedTextWriter writer)
-        {
-            writer.Indent -= 1;
-            writer.WriteLine("}");
-        }
-
-        public void EmitFactClass(IndentedTextWriter writer, DiagnosticSpecification.Fact fact)
-        {
-            var builder = new FactClassBuilder(fact);
-            builder.Emit(writer);
-        }
-        public void EmitDerivedClass(IndentedTextWriter writer, DiagnosticSpecification.Derived derived)
-        {
-            var builder = new DerivedBuilder(derived);
-            builder.Emit(writer);
-        }
-
-        public void Emit(IndentedTextWriter writer)
-        {
-            EmitPrologue(writer);
-            foreach (var fact in module.Facts) EmitFactClass(writer, fact);
-            foreach (var derived in module.Derived) EmitDerivedClass(writer, derived);
-            EmitEpilogue(writer);
-        }
+        public CodeCompileUnit CompileUnit => m_compileUnit;
     }
 }

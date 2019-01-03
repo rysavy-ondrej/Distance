@@ -9,6 +9,8 @@ using static Distance.Engine.Program;
 using Distance.Engine.Builder;
 using System.IO;
 using System.CodeDom.Compiler;
+using Microsoft.CSharp;
+using System.CodeDom;
 
 namespace Distance.Engine
 {
@@ -34,18 +36,34 @@ namespace Distance.Engine
 
             command.OnExecute(() =>
             {
-                var inpath = sourceProject.Value;
-                var outpath = Path.ChangeExtension(inpath, "gen.cs");
-                var module = DiagnosticSpecification.DeserializeDocument(inpath);
+                var inputPath = sourceProject.Value;
+                var outputPath = Path.ChangeExtension(inputPath, "gen.cs");
+                var module = DiagnosticSpecification.DeserializeDocument(inputPath);
                 var moduleBuilder = new ModuleBuilder(module);
-
-                using (var writer = new IndentedTextWriter(new StreamWriter(outpath)))
-                {
-                    moduleBuilder.Emit(writer);
-                    writer.Flush();
-                }                
+                GenerateCSharpCode(moduleBuilder.CompileUnit, outputPath);      
                 return 0;
             });
+        }
+
+        public static string GenerateCSharpCode(CodeCompileUnit compileunit, string outpufile)
+        {
+            // Generate the code with the C# code provider.
+            var provider = new CSharpCodeProvider();
+
+            // Create a TextWriter to a StreamWriter to the output file.
+            using (var sw = new StreamWriter(outpufile, false))
+            {
+                var tw = new IndentedTextWriter(sw, "    ");
+
+                // Generate source code using the code provider.
+                provider.GenerateCodeFromCompileUnit(compileunit, tw,
+                    new CodeGeneratorOptions());
+
+                // Close the output file.
+                tw.Close();
+            }
+
+            return outpufile;
         }
     }
 }

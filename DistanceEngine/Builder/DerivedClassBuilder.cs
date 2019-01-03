@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,13 +7,16 @@ using System.Text;
 using Distance.Utils;
 namespace Distance.Engine.Builder
 {
-    public class DerivedBuilder : ClassBuilder
+    public class DerivedClassBuilder : ClassBuilder
     {
         private readonly DiagnosticSpecification.Derived m_derived;
+        CodeTypeDeclaration m_typeDeclaration;
 
-        public DerivedBuilder(DiagnosticSpecification.Derived derived)
+        public DerivedClassBuilder(DiagnosticSpecification.Derived derived)
         {
             m_derived = derived;
+            m_typeDeclaration = new CodeTypeDeclaration(derived.Name.ToCamelCase());
+
         }
 
         void EmitPropertyDefinition(IndentedTextWriter writer, DiagnosticSpecification.Field field)
@@ -21,14 +25,29 @@ namespace Distance.Engine.Builder
             writer.WriteLine($"public {field.FieldType} {field.FieldName.ToCamelCase()} {{ get; set; }}");
         }
 
-        void EmitToStringMethod(IndentedTextWriter writer)
+        public static CodeMemberMethod EmitToStringMethod(params DiagnosticSpecification.Field[] fields)
         {
-            writer.WriteLine("public override string ToString()");
-            writer.WriteLine("{"); writer.Indent += 1;
+            var method = new CodeMemberMethod
+            {
+                Name = "ToString",
+                ReturnType = new CodeTypeReference("System.String"),
+                Attributes = MemberAttributes.Override | MemberAttributes.Public,
+            };
+            foreach (var field in fields)
+            {
+                var stringPrimitive = new CodePrimitiveExpression();
+                new CodeMethodInvokeExpression(new CodeTypeReferenceExpression("String"),
+                                               "Format", 
+                                               new CodePrimitiveExpression("{0}={1}"), 
+                                               new CodePrimitiveExpression(field.FieldName),
+                                               new CodePropertyReferenceExpression(new CodeThisReferenceExpression(), field.FieldName.ToCamelCase())
+                    );
+            }
+            method.Statements.Add(new CodeMethodReturnStatement(stringFormat));
+        }
             var fieldStr = String.Join(' ', m_derived.Fields.Select(f => $"{f.FieldName}={{{f.FieldName.ToCamelCase()}}}"));
             writer.WriteLine($"return $\"{m_derived.Name}: {fieldStr}\";");
-            writer.Indent -= 1;  writer.WriteLine("}"); 
-        }
+
 
         void EmitGetHashCodeMethod(IndentedTextWriter writer)
         {
