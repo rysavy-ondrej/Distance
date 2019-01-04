@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,14 @@ namespace Distance.Engine.Builder
     public class FactClassBuilder : ClassBuilder
     {
         DiagnosticSpecification.Fact m_fact;
+        CodeTypeDeclaration m_typeDeclaration;
+
+        public override CodeTypeDeclaration TypeDeclaration => m_typeDeclaration;
 
         public FactClassBuilder(DiagnosticSpecification.Fact fact)
         {
             m_fact = fact;
+            m_typeDeclaration = new CodeTypeDeclaration(fact.Name.ToCamelCase());
         }
         public override string ToString()
         {
@@ -66,7 +71,7 @@ namespace Distance.Engine.Builder
             writer.Indent -= 1; writer.WriteLine("}");
         }
 
-        public override void Emit(IndentedTextWriter writer)
+        public  void Emit(IndentedTextWriter writer)
         {
             var className = m_fact.Name.ToCamelCase();
             writer.WriteLine($"public class {className}");

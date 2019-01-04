@@ -31,7 +31,7 @@ namespace Distance.Engine.Builder
             foreach(var derived in m_module.Derived)
             {
                 var builder = new DerivedClassBuilder(derived);
-                m_codeNamespace.Types.Add(builder.TypeDclaration);
+                m_codeNamespace.Types.Add(builder.TypeDeclaration);
             }
             
         }
