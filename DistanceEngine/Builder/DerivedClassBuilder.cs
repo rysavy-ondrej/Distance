@@ -10,27 +10,18 @@ namespace Distance.Engine.Builder
     public class DerivedClassBuilder : ClassBuilder
     {
         private readonly DiagnosticSpecification.Derived m_derived;
-        CodeTypeDeclaration m_typeDeclaration;
-
-        public override CodeTypeDeclaration TypeDeclaration => m_typeDeclaration;
-
-        public DerivedClassBuilder(DiagnosticSpecification.Derived derived)
+        public DerivedClassBuilder(DiagnosticSpecification.Derived derived) : base (derived.Name)
         {
-            m_derived = derived;
-            var className = derived.Name.ToCamelCase();
-
-            m_typeDeclaration = new CodeTypeDeclaration(className);
-            var classType = new CodeTypeReference(className);
-
+            m_derived = derived;           
             foreach (var field in derived.Fields)
             {
-                m_typeDeclaration.Members.Add(EmitFieldDeclaration(field));
-                m_typeDeclaration.Members.Add(EmitPropertyDeclaration(field));
+                TypeDeclaration.Members.Add(EmitFieldDeclaration(field));
+                TypeDeclaration.Members.Add(EmitPropertyDeclaration(field));
             }
 
-            m_typeDeclaration.Members.Add(EmitToStringMethodCode(classType, derived.Fields.ToArray()));
-            m_typeDeclaration.Members.Add(EmitGetHashCodeMethodCode(classType, derived.Fields.ToArray()));
-            m_typeDeclaration.Members.Add(EmitEqualsMethodCode(classType, derived.Fields.ToArray()));
+            TypeDeclaration.Members.Add(EmitToStringMethodCode(TypeReference, derived.Fields.ToArray()));
+            TypeDeclaration.Members.Add(EmitGetHashCodeMethodCode(TypeReference, derived.Fields.ToArray()));
+            TypeDeclaration.Members.Add(EmitEqualsMethodCode(TypeReference, derived.Fields.ToArray()));
         }   
     }
 }

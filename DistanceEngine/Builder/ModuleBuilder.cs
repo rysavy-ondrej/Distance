@@ -34,7 +34,11 @@ namespace Distance.Engine.Builder
                 var builder = new DerivedClassBuilder(derived);
                 m_codeNamespace.Types.Add(builder.TypeDeclaration);
             }
-            
+            foreach (var @event in m_module.Events)
+            {
+                var builder = new EventClassBuilder(@event);
+                m_codeNamespace.Types.Add(builder.TypeDeclaration);
+            }
         }
 
         public CodeCompileUnit CompileUnit => m_compileUnit;

@@ -9,8 +9,28 @@ namespace Distance.Runtime
 {
     public static class Context
     {
-        static Logger m_logger = LogManager.GetLogger("DISTANCE");
-        
+        static readonly string DistanceLog = "DISTANCE.LOGS";
+        static readonly string DistanceEvt = "DISTANCE.EVTS";
+
+
+        static Logger m_logger; 
+        static Logger m_eventLogger;
+
+        public static void ConfigureLog(string filename)
+        {
+            var config = new NLog.Config.LoggingConfiguration();
+
+            var logfile = new NLog.Targets.FileTarget(DistanceLog) { FileName = filename };
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
+
+            var logconsole = new NLog.Targets.ColoredConsoleTarget(DistanceEvt);
+            config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole);
+
+            LogManager.Configuration = config;
+            m_logger = LogManager.GetLogger(DistanceLog);
+            m_eventLogger = LogManager.GetLogger(DistanceEvt);
+        }
+
         /// <summary>
         /// Prints the Warning message.
         /// </summary>
@@ -39,6 +59,22 @@ namespace Distance.Runtime
         public static void Info(this IContext context, string message)
         {
             m_logger.Info($"{context.Rule.Name}: {message}");            
+        }
+
+        public static void Event(this IContext context, DistanceEvent @event)
+        {
+            switch(@event.Severity)
+            {
+                case EventSeverity.Information:
+                    m_eventLogger.Info($"{@event.Name}: {@event.Message}");
+                    break;
+                case EventSeverity.Warning:
+                    m_eventLogger.Warn($"{@event.Name}: {@event.Message}");
+                    break;
+                case EventSeverity.Error:
+                    m_eventLogger.Error($"{@event.Name}: {@event.Message}");
+                    break;
+            }
         }
     }
 }

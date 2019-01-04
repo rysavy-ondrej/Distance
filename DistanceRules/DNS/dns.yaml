@@ -38,7 +38,7 @@ derived:
       - string    ip.address
 
 events:
-  - name:         DnsServerDown
+  - name:         DnsServerDownEvent
     severity:     error
     description:  "DNS server is not working. It is because the server is down or the specified address does not represent a valid DNS server."
     message:      "DNS server {server.ip.address} is down or invalid."

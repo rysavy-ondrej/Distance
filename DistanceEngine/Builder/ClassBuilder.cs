@@ -9,12 +9,27 @@ namespace Distance.Engine.Builder
 {
     public abstract class ClassBuilder
     {
-        public abstract CodeTypeDeclaration TypeDeclaration { get; }
+        public string ClassName { get; private set; }
+        private readonly CodeTypeDeclaration m_typeDeclaration;
+        private readonly CodeTypeReference m_typeReference;
+
+        public CodeTypeDeclaration TypeDeclaration => m_typeDeclaration;
+        public CodeTypeReference TypeReference => m_typeReference;
+
+        protected ClassBuilder(string name)
+        {
+            this.ClassName = name.ToCamelCase();
+            this.m_typeDeclaration = new CodeTypeDeclaration(ClassName);
+            this.m_typeReference = new CodeTypeReference(ClassName);
+        }
+
+        
 
         protected string GetBackingFieldName(DiagnosticSpecification.Field field)
         {
             return $"_{field.FieldName.ToCamelCase()}";
         }
+
         protected CodeMemberProperty EmitPropertyDeclaration(DiagnosticSpecification.Field field)
         {
             var propertyName = field.FieldName.ToCamelCase();

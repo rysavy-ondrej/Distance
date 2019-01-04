@@ -11,28 +11,20 @@ namespace Distance.Engine.Builder
     public class FactClassBuilder : ClassBuilder
     {
         DiagnosticSpecification.Fact m_fact;
-        CodeTypeDeclaration m_typeDeclaration;
-
-        public override CodeTypeDeclaration TypeDeclaration => m_typeDeclaration;
-
-        public FactClassBuilder(DiagnosticSpecification.Fact fact)
+        public FactClassBuilder(DiagnosticSpecification.Fact fact) : base (fact.Name)
         {
             m_fact = fact;
-            var className = fact.Name.ToCamelCase();
-            m_typeDeclaration = new CodeTypeDeclaration(className);
             foreach (var field in fact.Select)
             {
-                m_typeDeclaration.Members.Add(EmitFieldDeclaration(field));
-                m_typeDeclaration.Members.Add(EmitPropertyDeclaration(field));
+                TypeDeclaration.Members.Add(EmitFieldDeclaration(field));
+                TypeDeclaration.Members.Add(EmitPropertyDeclaration(field));
             }
-            var typeReference = new CodeTypeReference(className);
-
-            m_typeDeclaration.Members.Add(EmitToStringMethodCode(typeReference, fact.Select.ToArray()));
-            m_typeDeclaration.Members.Add(EmitGetHashCodeMethodCode(typeReference, fact.Select.ToArray()));
-            m_typeDeclaration.Members.Add(EmitEqualsMethodCode(typeReference, fact.Select.ToArray()));
-            m_typeDeclaration.Members.Add(EmitFilterFieldDeclaration(fact.Where));
-            m_typeDeclaration.Members.Add(EmitFieldsFieldDeclaration(fact.Select.ToArray()));
-            m_typeDeclaration.Members.Add(EmitCreateMethodCode(typeReference, fact.Select.ToArray()));
+            TypeDeclaration.Members.Add(EmitToStringMethodCode(TypeReference, fact.Select.ToArray()));
+            TypeDeclaration.Members.Add(EmitGetHashCodeMethodCode(TypeReference, fact.Select.ToArray()));
+            TypeDeclaration.Members.Add(EmitEqualsMethodCode(TypeReference, fact.Select.ToArray()));
+            TypeDeclaration.Members.Add(EmitFilterFieldDeclaration(fact.Where));
+            TypeDeclaration.Members.Add(EmitFieldsFieldDeclaration(fact.Select.ToArray()));
+            TypeDeclaration.Members.Add(EmitCreateMethodCode(TypeReference, fact.Select.ToArray()));
         }
         public override string ToString()
         {

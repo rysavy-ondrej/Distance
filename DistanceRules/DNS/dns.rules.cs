@@ -111,18 +111,19 @@ namespace Distance.Diagnostics.Dns
                 .Yield(_ => new LateResponse { Query = qr.Query, Response=qr.Response, Delay = qr.Response.DnsTime });
         }
     }
-    
+
     public class ServerUnresponsive : Rule
     {
         public override void Define()
         {
             DnsServer server = null;
             When()
-                .Match(() => server);
-      //          .Not<DnsQueryResponse>(other => server.IpAddress == other.Query.IpDst);
+                .Match(() => server)
+                .Not<QueryResponse>(other => server.IpAddress == other.Query.IpDst);
             Then()
-                .Do(ctx => ctx.Error($"Dns server {server.IpAddress} does not response to any query. Either the DNS server {server.IpAddress} does not exists or it is down."));
+                .Yield(_ => new DnsServerDownEvent { Server = server });
         }
     } 
+ 
 }
  

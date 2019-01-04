@@ -1,4 +1,6 @@
 ﻿using Distance.Diagnostics.Dns;
+using Distance.Diagnostics.Icmp;
+using Distance.Runtime;
 using Microsoft.Extensions.CommandLineUtils;
 using NRules;
 using NRules.Fluent;
@@ -79,9 +81,10 @@ namespace Distance.Engine
             if (!File.Exists(input)) throw new ArgumentException($"File '{input}' does not exist.");
             var pcapPath = Path.GetFullPath(input);
             var logPath = Path.ChangeExtension(pcapPath, "log");
+            var eventPath = Path.ChangeExtension(pcapPath, "log"); 
             if (File.Exists(logPath)) File.Delete(logPath);
 
-            Program.ConfigureLog(logPath);
+            Context.ConfigureLog(logPath);
             var sw = new Stopwatch();
             sw.Start();
 
@@ -98,7 +101,7 @@ namespace Distance.Engine
             //
             Console.Write($"Loading and decoding packets from '{pcapPath}'...");
             var dnsPackets = LoadFacts<DnsPacket>(pcapPath, DnsPacket.Filter, DnsPacket.Fields, DnsPacket.Create).ToList();
-           // var icmpPackets = LoadFacts<IcmpPacket>(pcapPath, IcmpPacket.Filter, IcmpPacket.Fields, IcmpPacket.Create).ToList();
+            var icmpPackets = LoadFacts<IcmpPacket>(pcapPath, IcmpPacket.Filter, IcmpPacket.Fields, IcmpPacket.Create).ToList();
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
@@ -127,8 +130,8 @@ namespace Distance.Engine
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
-           // Console.Write($"Inserting 'IcmpPacket' facts ({icmpPackets.Count}) to the session...");
-           // session.InsertAll(icmpPackets);
+            Console.Write($"Inserting 'IcmpPacket' facts ({icmpPackets.Count}) to the session...");
+            session.InsertAll(icmpPackets);
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();

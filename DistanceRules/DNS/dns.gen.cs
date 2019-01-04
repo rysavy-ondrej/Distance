@@ -356,4 +356,51 @@ namespace Distance.Diagnostics.Dns {
                         && object.Equals(this.IpAddress, that.IpAddress));
         }
     }
+    
+    public class DnsServerDownEvent : Distance.Runtime.DistanceEvent {
+        
+        private DnsServer _Server;
+        
+        [FieldName("server")]
+        public virtual DnsServer Server {
+            get {
+                return this._Server;
+            }
+            set {
+                this._Server = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "DnsServerDownEvent";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("DNS server {0} is down or invalid.", this.Server);
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("DnsServerDownEvent: server={0}", this.Server);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.Server);
+        }
+        
+        public override bool Equals(object obj) {
+            DnsServerDownEvent that = obj as DnsServerDownEvent;
+            return ((that != null) 
+                        && object.Equals(this.Server, that.Server));
+        }
+    }
 }

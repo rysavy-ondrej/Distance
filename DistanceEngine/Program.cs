@@ -6,28 +6,11 @@ namespace Distance.Engine
 {
     class Program
     {
-        public static void ConfigureLog(string filename, bool logToConsole = false)
-        {
-            var config = new NLog.Config.LoggingConfiguration();
-
-            var logfile = new NLog.Targets.FileTarget() { FileName = filename };
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
-
-            if (logToConsole)
-            {
-                var logconsole = new NLog.Targets.ColoredConsoleTarget();
-                config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole);
-            }
-
-            LogManager.Configuration = config;
-        }
-
         public class Options
         {
             public CommandOption EnableDebug { get; internal set; }
         }
 
-        Logger logger = NLog.LogManager.GetCurrentClassLogger();
         static void Main(string[] args)
         {
 
