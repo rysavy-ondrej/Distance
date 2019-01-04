@@ -18,76 +18,80 @@ namespace Distance.Engine.Builder
         public FactClassBuilder(DiagnosticSpecification.Fact fact)
         {
             m_fact = fact;
-            m_typeDeclaration = new CodeTypeDeclaration(fact.Name.ToCamelCase());
+            var className = fact.Name.ToCamelCase();
+            m_typeDeclaration = new CodeTypeDeclaration(className);
+            foreach (var field in fact.Select)
+            {
+                m_typeDeclaration.Members.Add(EmitFieldDeclaration(field));
+                m_typeDeclaration.Members.Add(EmitPropertyDeclaration(field));
+            }
+            var typeReference = new CodeTypeReference(className);
+
+            m_typeDeclaration.Members.Add(EmitToStringMethodCode(typeReference, fact.Select.ToArray()));
+            m_typeDeclaration.Members.Add(EmitGetHashCodeMethodCode(typeReference, fact.Select.ToArray()));
+            m_typeDeclaration.Members.Add(EmitEqualsMethodCode(typeReference, fact.Select.ToArray()));
+            m_typeDeclaration.Members.Add(EmitFilterFieldDeclaration(fact.Where));
+            m_typeDeclaration.Members.Add(EmitFieldsFieldDeclaration(fact.Select.ToArray()));
+            m_typeDeclaration.Members.Add(EmitCreateMethodCode(typeReference, fact.Select.ToArray()));
         }
         public override string ToString()
         {
             return $"FactClassBuilder: Fact={{{m_fact}}}";
         }
 
-
-        void EmitPropertyDefinition(IndentedTextWriter writer, DiagnosticSpecification.Field field)
+        CodeMemberField EmitFilterFieldDeclaration(string filter)
         {
-            writer.WriteLine($"[FieldName(\"{field.FieldName}\")]");
-            writer.WriteLine($"public {field.FieldType} {field.FieldName.ToCamelCase()} {{ get; set; }}");
-        }
-
-        void EmitToStringMethod(IndentedTextWriter writer)
-        {
-            writer.WriteLine("public override string ToString()");
-            writer.WriteLine("{"); writer.Indent += 1;
-            var fieldStr = String.Join(' ', m_fact.Select.Select(f => $"{f.FieldName}={{{f.FieldName.ToCamelCase()}}}"));
-            writer.WriteLine($"return $\"{m_fact.Name}: {fieldStr}\";");
-            writer.Indent -= 1; writer.WriteLine("}");
-        }
-
-        void EmitGetHashCodeMethod(IndentedTextWriter writer)
-        {
-            var properties = String.Join(",", m_fact.Select.Select(f => f.FieldName.ToCamelCase()));
-            writer.WriteLine($"public override int GetHashCode() => HashFunction.GetHashCode({properties});");
-        }
-
-        void EmitEqualsMethod(IndentedTextWriter writer)
-        {
-            var properties = String.Join(" && ", m_fact.Select.Select(f => $"Equals(this.{f.FieldName.ToCamelCase()}, that.{f.FieldName.ToCamelCase()})"));
-            writer.WriteLine("public override bool Equals(object obj)");
-            writer.WriteLine("{"); writer.Indent += 1;
-            writer.WriteLine($"return (obj is {m_fact.Name.ToCamelCase()} that) && {properties};");
-            writer.Indent -= 1; writer.WriteLine("}");
-        }
-
-        void EmitCreateMethod(IndentedTextWriter writer)
-        {
-            writer.WriteLine($"public static {m_fact.Name.ToCamelCase()} Create(string[] values)");
-            writer.WriteLine("{"); writer.Indent += 1;
-            writer.WriteLine($"return new {m_fact.Name.ToCamelCase()}");
-            writer.WriteLine("{"); writer.Indent += 1;
-            for (int i =0; i < m_fact.Select.Count; i++)
+            return new CodeMemberField
             {
-                var field = m_fact.Select[i];
-                writer.WriteLine($"{field.FieldName.ToCamelCase()} = values[{i}].To{field.FieldType.ToCamelCase()}(),");
-            }
-            writer.Indent -= 1; writer.WriteLine("};");
-            writer.Indent -= 1; writer.WriteLine("}");
+                Name = "Filter",
+                Type = new CodeTypeReference(typeof(string)),
+                Attributes = MemberAttributes.Static | MemberAttributes.Public,
+                InitExpression = new CodePrimitiveExpression(filter)
+            };
         }
 
-        public  void Emit(IndentedTextWriter writer)
+        CodeMemberField EmitFieldsFieldDeclaration(DiagnosticSpecification.Field[] fields)
         {
-            var className = m_fact.Name.ToCamelCase();
-            writer.WriteLine($"public class {className}");
-            writer.WriteLine("{"); writer.Indent += 1;
+            var fieldNames = fields.Select(x => new CodePrimitiveExpression(x.FieldName));
+            return new CodeMemberField
+            {
+                Name = "Fields",
+                Type = new CodeTypeReference(typeof(string[])),
+                Attributes = MemberAttributes.Static | MemberAttributes.Public,
+                InitExpression = new CodeArrayCreateExpression(new CodeTypeReference(typeof(string[])), fieldNames.ToArray())
+            };
+        }
+        CodeMemberMethod EmitCreateMethodCode(CodeTypeReference classType, DiagnosticSpecification.Field[] fields)
+        {
+            var method = new CodeMemberMethod
+            {
+                Name = "Create",
+                ReturnType = classType,
+                Attributes = MemberAttributes.Static | MemberAttributes.Public,
+            };
 
-            var fieldsStringArray = String.Join(',', m_fact.Select.Select(x => $"\"{x.FieldName}\""));
-            writer.WriteLine($"public static string Filter = \"{m_fact.Where}\";");
-            writer.WriteLine($"public static string[] Fields = {{ {fieldsStringArray} }};");
+            method.Parameters.Add(new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(string[])), "values"));
 
-            foreach (var field in m_fact.Select)
-                EmitPropertyDefinition(writer, field);
-            EmitEqualsMethod(writer);
-            EmitGetHashCodeMethod(writer);
-            EmitToStringMethod(writer);
-            EmitCreateMethod(writer);
-            writer.Indent -= 1; writer.WriteLine("}");
+            var newObj = new CodeVariableDeclarationStatement
+            {
+                Name = "newObj",
+                Type = classType,
+                InitExpression = new CodeObjectCreateExpression(classType)
+            };
+
+            method.Statements.Add(newObj);
+
+            var assignExpressions = fields.Select((f, i) =>
+                new CodeAssignStatement(
+                    new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("newObj"), GetBackingFieldName(f)),
+                    new CodeMethodInvokeExpression(new CodeMethodReferenceExpression(
+                        new CodeArrayIndexerExpression(new CodeVariableReferenceExpression("values"), new CodePrimitiveExpression(i)),
+                        $"To{f.FieldType.ToCamelCase()}"))
+                ));
+
+            method.Statements.AddRange(assignExpressions.ToArray());
+            method.Statements.Add(new CodeMethodReturnStatement(new CodeVariableReferenceExpression("newObj")));
+            return method;
         }
     }
 }

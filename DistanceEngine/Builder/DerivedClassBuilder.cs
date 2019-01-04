@@ -17,40 +17,20 @@ namespace Distance.Engine.Builder
         public DerivedClassBuilder(DiagnosticSpecification.Derived derived)
         {
             m_derived = derived;
-            m_typeDeclaration = new CodeTypeDeclaration(derived.Name.ToCamelCase());
-            m_typeDeclaration.Members.Add(EmitToStringMethod(derived.Name.ToCamelCase(), derived.Fields.ToArray()));
-            foreach(var field in derived.Fields)
+            var className = derived.Name.ToCamelCase();
+
+            m_typeDeclaration = new CodeTypeDeclaration(className);
+            var classType = new CodeTypeReference(className);
+
+            foreach (var field in derived.Fields)
             {
-                m_typeDeclaration.Members.Add(EmitPropertyDefinition(field));
+                m_typeDeclaration.Members.Add(EmitFieldDeclaration(field));
+                m_typeDeclaration.Members.Add(EmitPropertyDeclaration(field));
             }
-        }
 
-   
-
-        void EmitGetHashCodeMethod(IndentedTextWriter writer)
-        {
-            var properties = String.Join(",", m_derived.Fields.Select(f => f.FieldName.ToCamelCase()));
-            writer.WriteLine($"public override int GetHashCode() => HashFunction.GetHashCode({properties});");
-        }
-
-        void EmitEqualsMethod(IndentedTextWriter writer)
-        {
-            var properties = String.Join(" && ", m_derived.Fields.Select(f => $"Equals(this.{f.FieldName.ToCamelCase()}, that.{f.FieldName.ToCamelCase()})"));
-            writer.WriteLine("public override bool Equals(object obj)");
-            writer.WriteLine("{"); writer.Indent += 1;
-            writer.WriteLine($"return (obj is {m_derived.Name.ToCamelCase()} that) && {properties};");
-            writer.Indent -= 1;  writer.WriteLine("}");
-        }
-
-        public void Emit(IndentedTextWriter writer)
-        {
-            var className = m_derived.Name.ToCamelCase();
-            writer.WriteLine($"public class {className}");
-            writer.WriteLine("{"); writer.Indent += 1;
-
-            EmitEqualsMethod(writer);
-            EmitGetHashCodeMethod(writer);
-            writer.Indent -= 1; writer.WriteLine("}");
-        }
+            m_typeDeclaration.Members.Add(EmitToStringMethodCode(classType, derived.Fields.ToArray()));
+            m_typeDeclaration.Members.Add(EmitGetHashCodeMethodCode(classType, derived.Fields.ToArray()));
+            m_typeDeclaration.Members.Add(EmitEqualsMethodCode(classType, derived.Fields.ToArray()));
+        }   
     }
 }

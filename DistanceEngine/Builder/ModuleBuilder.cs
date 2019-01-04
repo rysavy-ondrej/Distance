@@ -22,6 +22,7 @@ namespace Distance.Engine.Builder
 
             m_codeNamespace.Imports.Add(new CodeNamespaceImport("Distance.Runtime"));
             m_codeNamespace.Imports.Add(new CodeNamespaceImport("Distance.Utils"));
+            m_codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
 
             foreach (var fact in m_module.Facts)
             {

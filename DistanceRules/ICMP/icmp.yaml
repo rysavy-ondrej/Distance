@@ -4,18 +4,18 @@ facts:
   - name: IcmpPacket
     where: icmp
     select: 
-      - int     frame.number
-      - string  ip.src
-      - string  ip.dst
-      - int     icmp.type
-      - int     icmp.code        
-      - int     icmp.ident
-      - int     icmp.seq
+      - int32     frame.number
+      - string    ip.src
+      - string    ip.dst
+      - int32     icmp.type
+      - int32     icmp.code        
+      - int32     icmp.ident
+      - int32     icmp.seq
 derived:
   - name: IcmpDestinationUnreachable
     fields: 
       - IcmpPacket  packet
-      - int         code
+      - int32         code
   - name: TtlExpired
     fields:
       - IcmpPacket  packet

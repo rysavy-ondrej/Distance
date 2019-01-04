@@ -4,12 +4,12 @@ facts:
   - name: DnsPacket
     where: dns
     select: 
-      - int       frame.number
+      - int32     frame.number
       - string    ip.src
       - string    ip.dst
       - string    dns.id
-      - bool      dns.flags.response
-      - int       dns.flags.rcode
+      - boolean   dns.flags.response
+      - int32     dns.flags.rcode
       - double    dns.time
       - string    dns.qry.name
 derived:
