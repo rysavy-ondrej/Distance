@@ -25,10 +25,14 @@ namespace Distance.Engine.Builder
                 Attributes = MemberAttributes.Public,
                 Type = new CodeTypeReference(field.FieldType.ToCamelCase())
             };
-            var attrib = new CodeAttributeDeclaration(new CodeTypeReference("FieldName"), new CodeAttributeArgument(new CodePrimitiveExpression(field.FieldName)));
-            property.CustomAttributes.Add(attrib);
+
+            var propertyAttributes = new CodeAttributeDeclaration(new CodeTypeReference("FieldName"), new CodeAttributeArgument(new CodePrimitiveExpression(field.FieldName)));
+
+            property.CustomAttributes.Add(propertyAttributes);
+
             property.SetStatements.Add(new CodeAssignStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), backingFieldName), new CodeVariableReferenceExpression("value")));
             property.GetStatements.Add(new CodeMethodReturnStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), backingFieldName)));
+
             return property;
         }
 
@@ -42,6 +46,18 @@ namespace Distance.Engine.Builder
             };
         }
 
+        /// <summary>
+        /// Emits code for ToString() method.
+        /// </summary>
+        /// <param name="classType"></param>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// public override ToString()
+        /// {
+        ///    return String.Format("ClassNAME: field0={0} ... fieldn={N}", this.Prop0, ... this.PropN);
+        /// }
+        /// </remarks>
         protected CodeMemberMethod EmitToStringMethodCode(CodeTypeReference classType, params DiagnosticSpecification.Field[] fields)
         {
             var method = new CodeMemberMethod
@@ -52,14 +68,22 @@ namespace Distance.Engine.Builder
             };
 
             var formatString = $"{classType.BaseType}: " + String.Join(' ', fields.Select((f, i) => $"{f.FieldName}={{{i}}}"));
-            var fieldExpressions = fields.Select(GetPropertyReferenceExpression).AsEnumerable<CodeExpression>();
+            var formatStringArguments = fields.Select(GetPropertyReferenceExpression).AsEnumerable<CodeExpression>();
 
-            var formatStringExpression = new CodeMethodInvokeExpression(
-                        new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(String)), "Format"),
-                        fieldExpressions.Prepend(new CodePrimitiveExpression(formatString)).ToArray()
-                        );
+            method.Statements.Add(
+                new CodeMethodReturnStatement
+                {
+                    Expression = new CodeMethodInvokeExpression
+                                 (
+                                    new CodeMethodReferenceExpression
+                                    {
+                                        TargetObject = new CodeTypeReferenceExpression(typeof(String)),
+                                        MethodName = "Format"
+                                    },
+                                    formatStringArguments.Prepend(new CodePrimitiveExpression(formatString)).ToArray()
+                                 )
+                });
 
-            method.Statements.Add(new CodeMethodReturnStatement(formatStringExpression));
             return method;
         }
 
@@ -71,13 +95,19 @@ namespace Distance.Engine.Builder
                 ReturnType = new CodeTypeReference(typeof(int)),
                 Attributes = MemberAttributes.Override | MemberAttributes.Public,
             };
-            
-            var fieldExpressions = fields.Select(GetPropertyReferenceExpression).AsEnumerable<CodeExpression>();
+
             method.Statements.Add(
-                new CodeMethodReturnStatement(
-                    new CodeMethodInvokeExpression(
-                        new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(HashFunction)), "GetHashCode"), 
-                        fieldExpressions.ToArray())));
+                new CodeMethodReturnStatement
+                {
+                    Expression = new CodeMethodInvokeExpression(
+                        new CodeMethodReferenceExpression
+                        {
+                            TargetObject = new CodeTypeReferenceExpression(typeof(HashFunction)),
+                            MethodName = "GetHashCode",
+                        },
+                        fields.Select(GetPropertyReferenceExpression).AsEnumerable<CodeExpression>().ToArray())
+                });
+
             return method;
         }
 
@@ -96,13 +126,24 @@ namespace Distance.Engine.Builder
             };
             method.Parameters.Add(new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(object)), "obj"));
 
-            var castExpr = new CodeVariableDeclarationStatement(classType, "that",
-                // new CodeCastExpression(classType, new CodeVariableReferenceExpression("obj")));
-                new CodeSnippetExpression($"obj as {classType.BaseType}"));
+            var castExpr = new CodeVariableDeclarationStatement
+            {
+                Type = classType,
+                Name = "that",
+                InitExpression = new CodeSnippetExpression($"obj as {classType.BaseType}")
+            };
+
             method.Statements.Add(castExpr);
 
             var equalsExpressions = fields.Select(field => GetEqualsExpression(new CodeThisReferenceExpression(), new CodeVariableReferenceExpression("that"), field));
-            var thatNotNullExpression = new CodeBinaryOperatorExpression(new CodeVariableReferenceExpression("that"), CodeBinaryOperatorType.IdentityInequality, new CodePrimitiveExpression(null));
+
+            var thatNotNullExpression = new CodeBinaryOperatorExpression
+            {
+                Left = new CodeVariableReferenceExpression("that"),
+                Operator = CodeBinaryOperatorType.IdentityInequality,
+                Right = new CodePrimitiveExpression(null)
+            };
+
             var testExpression = equalsExpressions.Prepend(thatNotNullExpression).Aggregate((left, right) => new CodeBinaryOperatorExpression(left, CodeBinaryOperatorType.BooleanAnd, right));
 
             method.Statements.Add(new CodeMethodReturnStatement(testExpression));
@@ -112,9 +153,10 @@ namespace Distance.Engine.Builder
         private CodeExpression GetEqualsExpression(CodeThisReferenceExpression codeThis, CodeVariableReferenceExpression codeThat, DiagnosticSpecification.Field field)
         {
             return new CodeMethodInvokeExpression(
-                 new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(object)), "Equals"),
-                 new CodePropertyReferenceExpression(codeThis, field.FieldName.ToCamelCase()),
-                 new CodePropertyReferenceExpression(codeThat, field.FieldName.ToCamelCase()));                 
+                    new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(object)), "Equals"),
+                    new CodePropertyReferenceExpression(codeThis, field.FieldName.ToCamelCase()),
+                    new CodePropertyReferenceExpression(codeThat, field.FieldName.ToCamelCase())
+                );
         }
     }
 }

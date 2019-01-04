@@ -82,12 +82,16 @@ namespace Distance.Engine.Builder
             method.Statements.Add(newObj);
 
             var assignExpressions = fields.Select((f, i) =>
-                new CodeAssignStatement(
-                    new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("newObj"), GetBackingFieldName(f)),
-                    new CodeMethodInvokeExpression(new CodeMethodReferenceExpression(
-                        new CodeArrayIndexerExpression(new CodeVariableReferenceExpression("values"), new CodePrimitiveExpression(i)),
-                        $"To{f.FieldType.ToCamelCase()}"))
-                ));
+                new CodeAssignStatement
+                {
+                    Left = new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("newObj"), GetBackingFieldName(f)),
+                    Right = new CodeMethodInvokeExpression(
+                        new CodeMethodReferenceExpression
+                        {
+                            TargetObject = new CodeArrayIndexerExpression(new CodeVariableReferenceExpression("values"), new CodePrimitiveExpression(i)),
+                            MethodName = $"To{f.FieldType.ToCamelCase()}"
+                        })
+                });
 
             method.Statements.AddRange(assignExpressions.ToArray());
             method.Statements.Add(new CodeMethodReturnStatement(new CodeVariableReferenceExpression("newObj")));
