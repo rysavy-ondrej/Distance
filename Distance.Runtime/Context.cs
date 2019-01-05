@@ -21,12 +21,13 @@ namespace Distance.Runtime
             var config = new NLog.Config.LoggingConfiguration();
 
             var logfile = new NLog.Targets.FileTarget(DistanceLog) { FileName = filename };
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile, DistanceLog);
 
             var logconsole = new NLog.Targets.ColoredConsoleTarget(DistanceEvt);
-            config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole);
+            config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole, DistanceEvt);
 
             LogManager.Configuration = config;
+
             m_logger = LogManager.GetLogger(DistanceLog);
             m_eventLogger = LogManager.GetLogger(DistanceEvt);
         }
