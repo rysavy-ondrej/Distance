@@ -1,5 +1,6 @@
 ﻿using Distance.Diagnostics.Dns;
 using Distance.Diagnostics.Icmp;
+using Distance.Diagnostics.Lan;
 using Distance.Runtime;
 using Microsoft.Extensions.CommandLineUtils;
 using NRules;
@@ -102,6 +103,7 @@ namespace Distance.Engine
             Console.Write($"Loading and decoding packets from '{pcapPath}'...");
             var dnsPackets = LoadFacts<DnsPacket>(pcapPath, DnsPacket.Filter, DnsPacket.Fields, DnsPacket.Create).ToList();
             var icmpPackets = LoadFacts<IcmpPacket>(pcapPath, IcmpPacket.Filter, IcmpPacket.Fields, IcmpPacket.Create).ToList();
+            var ipPackets = LoadFacts<IpPacket>(pcapPath, IpPacket.Filter, IpPacket.Fields, IpPacket.Create).ToList();
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();
@@ -132,6 +134,11 @@ namespace Distance.Engine
             sw.Restart();
             Console.Write($"Inserting 'IcmpPacket' facts ({icmpPackets.Count}) to the session...");
             session.InsertAll(icmpPackets);
+            Console.WriteLine($"ok [{sw.Elapsed}].");
+
+            sw.Restart();
+            Console.Write($"Inserting 'IpPacket' facts ({ipPackets.Count}) to the session...");
+            session.InsertAll(ipPackets);
             Console.WriteLine($"ok [{sw.Elapsed}].");
 
             sw.Restart();

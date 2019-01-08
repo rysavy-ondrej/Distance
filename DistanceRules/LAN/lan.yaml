@@ -1,0 +1,26 @@
+﻿meta:
+  namespace: Distance.Diagnostics.Lan
+facts:
+  - name: IpPacket
+    where: ip
+    select: 
+      - int32     frame.number
+      - string    eth.src
+      - string    eth.dst
+      - string    ip.src
+      - string    ip.dst
+derived:
+  - name: DuplicateAddressDetected
+    fields:
+      - string    ip
+      - string    eth1
+      - string    eth2
+
+rules:
+  - name: DuplicateAddress
+    when:
+      match:
+        - IpPacket packet1 => true
+        - IpPacket packet2 => packet1.ip.src == packet2.ip.src && packet1.eth.src != packet2.eth.src
+    then:
+      yield: DuplicateAddressDetected (ip = packet1.ip.src, eth1 = packet1.eth.src, eth2 = packet2.eth.src)

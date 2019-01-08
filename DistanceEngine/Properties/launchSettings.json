@@ -14,6 +14,11 @@
       "commandName": "Project",
       "commandLineArgs": "run test.pcap",
       "workingDirectory": "C:\\GitHub\\Distance\\DistanceEngine\\Data"
+    },
+    "build lan.yaml": {
+      "commandName": "Project",
+      "commandLineArgs": "build lan.yaml",
+      "workingDirectory": "C:\\GitHub\\Distance\\DistanceRules\\LAN"
     }
   }
 }

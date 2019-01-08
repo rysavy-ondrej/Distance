@@ -24,20 +24,29 @@ namespace Distance.Engine.Builder
             m_codeNamespace.Imports.Add(new CodeNamespaceImport("Distance.Utils"));
             m_codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
 
-            foreach (var fact in m_module.Facts)
+            if (m_module.Facts != null)
             {
-                var builder = new FactClassBuilder(fact);
-                m_codeNamespace.Types.Add(builder.TypeDeclaration);
+                foreach (var fact in m_module.Facts)
+                {
+                    var builder = new FactClassBuilder(fact);
+                    m_codeNamespace.Types.Add(builder.TypeDeclaration);
+                }
             }
-            foreach(var derived in m_module.Derived)
+            if (m_module.Derived != null)
             {
-                var builder = new DerivedClassBuilder(derived);
-                m_codeNamespace.Types.Add(builder.TypeDeclaration);
+                foreach (var derived in m_module.Derived)
+                {
+                    var builder = new DerivedClassBuilder(derived);
+                    m_codeNamespace.Types.Add(builder.TypeDeclaration);
+                }
             }
-            foreach (var @event in m_module.Events)
+            if (m_module.Events != null)
             {
-                var builder = new EventClassBuilder(@event);
-                m_codeNamespace.Types.Add(builder.TypeDeclaration);
+                foreach (var @event in m_module.Events)
+                {
+                    var builder = new EventClassBuilder(@event);
+                    m_codeNamespace.Types.Add(builder.TypeDeclaration);
+                }
             }
         }
 
