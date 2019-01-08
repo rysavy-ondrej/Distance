@@ -10,17 +10,19 @@ facts:
       - string    ip.src
       - string    ip.dst
 derived:
-  - name: DuplicateAddressDetected
-    fields:
-      - string    ip
-      - string    eth1
-      - string    eth2
+  - name: AddressMapping
+    description: Carries information on mapping between ip and mac addresses
+    fields:       
+      - string ip.addr
+      - string eth.addr
 
-rules:
-  - name: DuplicateAddress
-    when:
-      match:
-        - IpPacket packet1 => true
-        - IpPacket packet2 => packet1.ip.src == packet2.ip.src && packet1.eth.src != packet2.eth.src
-    then:
-      yield: DuplicateAddressDetected (ip = packet1.ip.src, eth1 = packet1.eth.src, eth2 = packet2.eth.src)
+events:    
+  - name: DuplicateAddressDetected
+    severity:     error
+    description:  "Duplicate IP address assignement detected. Two or more MAC addresses share the same IP address."
+    message:      "Two or more MAC addresses use network address {ip.address}."
+    fields:
+      - string    ip.address
+      - string[]  eth.addresses
+
+      

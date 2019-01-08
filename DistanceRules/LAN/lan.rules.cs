@@ -4,20 +4,27 @@
     using Distance.Utils;
     using NRules.Fluent.Dsl;
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     public class DuplicateAddress : Rule
     {
         public override void Define()
         {
-            IpPacket ipPacket1 = null;
-            IpPacket ipPacket2 = null;
+            AddressMapping mapping = null;
+            IEnumerable<AddressMapping> conflicts = null;
 
             When()
-               .Match(() => ipPacket1, p => true)
-               .Match(() => ipPacket2, p2 => ipPacket1.IpSrc == p2.IpSrc, p2 => ipPacket1.EthSrc != p2.EthSrc);
-
+               .Match(() => mapping)
+               .Query(() => conflicts,
+                    c => c.Match<AddressMapping>(
+                         m => mapping.IpAddr == m.IpAddr,
+                         m => mapping.EthAddr != m.EthAddr)
+                         .Collect()
+                         .Where(x => x.Any()));
+                         
             Then()
-                .Yield(_ => new DuplicateAddressDetected { Ip = ipPacket1.IpSrc, Eth1 = ipPacket1.EthSrc, Eth2 = ipPacket2.EthSrc });
+                .Yield(_ => new DuplicateAddressDetected { IpAddress = mapping.IpAddr, EthAddresses = conflicts.Select(c=>c.EthAddr).ToArray() });
         }
     }
 }

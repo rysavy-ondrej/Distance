@@ -210,13 +210,13 @@ namespace Distance.Engine.Builder
 
             private static Field ParseFieldDeclaration(string declaration)
             {
-                var identifier = @"[_a-zA-Z][_\.a-zA-Z0-9]*";
-                var pattern = $"({identifier})\\s+({identifier})";
+                var identifier = @"[_a-zA-Z][_\.a-zA-Z0-9]*(\[\])?";
+                var pattern = $"(?<FieldType>{identifier})\\s+(?<FieldName>{identifier})";
                 var match = Regex.Match(declaration, pattern);
                 if (match.Success)
                 {
-                    var type = match.Groups[1].Value;
-                    var name = match.Groups[2].Value;
+                    var type = match.Groups["FieldType"].Value;
+                    var name = match.Groups["FieldName"].Value;
                     return new Field { FieldName = name, FieldType = type };
                 }
                 else

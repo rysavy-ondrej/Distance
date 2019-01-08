@@ -114,58 +114,105 @@ namespace Distance.Diagnostics.Lan {
         }
     }
     
-    public class DuplicateAddressDetected {
+    public class AddressMapping {
         
-        private String _Ip;
+        private String _IpAddr;
         
-        private String _Eth1;
+        private String _EthAddr;
         
-        private String _Eth2;
-        
-        [FieldName("ip")]
-        public virtual String Ip {
+        [FieldName("ip.addr")]
+        public virtual String IpAddr {
             get {
-                return this._Ip;
+                return this._IpAddr;
             }
             set {
-                this._Ip = value;
+                this._IpAddr = value;
             }
         }
         
-        [FieldName("eth1")]
-        public virtual String Eth1 {
+        [FieldName("eth.addr")]
+        public virtual String EthAddr {
             get {
-                return this._Eth1;
+                return this._EthAddr;
             }
             set {
-                this._Eth1 = value;
-            }
-        }
-        
-        [FieldName("eth2")]
-        public virtual String Eth2 {
-            get {
-                return this._Eth2;
-            }
-            set {
-                this._Eth2 = value;
+                this._EthAddr = value;
             }
         }
         
         public override string ToString() {
-            return string.Format("DuplicateAddressDetected: ip={0} eth1={1} eth2={2}", this.Ip, this.Eth1, this.Eth2);
+            return string.Format("AddressMapping: ip.addr={0} eth.addr={1}", this.IpAddr, this.EthAddr);
         }
         
         public override int GetHashCode() {
-            return Distance.Utils.HashFunction.GetHashCode(this.Ip, this.Eth1, this.Eth2);
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddr, this.EthAddr);
+        }
+        
+        public override bool Equals(object obj) {
+            AddressMapping that = obj as AddressMapping;
+            return (((that != null) 
+                        && object.Equals(this.IpAddr, that.IpAddr)) 
+                        && object.Equals(this.EthAddr, that.EthAddr));
+        }
+    }
+    
+    public class DuplicateAddressDetected : Distance.Runtime.DistanceEvent {
+        
+        private String _IpAddress;
+        
+        private String[] _EthAddresses;
+        
+        [FieldName("ip.address")]
+        public virtual String IpAddress {
+            get {
+                return this._IpAddress;
+            }
+            set {
+                this._IpAddress = value;
+            }
+        }
+        
+        [FieldName("eth.addresses")]
+        public virtual String[] EthAddresses {
+            get {
+                return this._EthAddresses;
+            }
+            set {
+                this._EthAddresses = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "DuplicateAddressDetected";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("Two or more MAC addresses use network address {0}.", this.IpAddress);
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("DuplicateAddressDetected: ip.address={0} eth.addresses={1}", this.IpAddress, this.EthAddresses);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddress, this.EthAddresses);
         }
         
         public override bool Equals(object obj) {
             DuplicateAddressDetected that = obj as DuplicateAddressDetected;
-            return ((((that != null) 
-                        && object.Equals(this.Ip, that.Ip)) 
-                        && object.Equals(this.Eth1, that.Eth1)) 
-                        && object.Equals(this.Eth2, that.Eth2));
+            return (((that != null) 
+                        && object.Equals(this.IpAddress, that.IpAddress)) 
+                        && object.Equals(this.EthAddresses, that.EthAddresses));
         }
     }
 }
