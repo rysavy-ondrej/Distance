@@ -20,7 +20,7 @@ events:
   - name: DuplicateAddressDetected
     severity:     error
     description:  "Duplicate IP address assignement detected. Two or more MAC addresses share the same IP address."
-    message:      "Two or more MAC addresses use network address {ip.address}."
+    message:      "Two or more network hosts has assigned the same network address {ip.address}."
     fields:
       - string    ip.address
       - string[]  eth.addresses
