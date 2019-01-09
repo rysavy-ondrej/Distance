@@ -29,8 +29,8 @@ namespace Distance.Engine
         {
             command.Description = "Run a distance ruleset against the specified input file(s).";
             command.HelpOption("-?|-help");
-            var profileAssemblyOption = command.Option("-profile", "Specifies assembly that contains a diagnostic profile.", CommandOptionType.SingleValue);
-            var parallelOption = command.Option("-parallel", "Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).", CommandOptionType.SingleValue);
+            var profileAssemblyOption = command.Option("-profile <PROFILENAME>", "Specifies assembly that contains a diagnostic profile.", CommandOptionType.SingleValue);
+            var parallelOption = command.Option("-parallel <NUMBER>", "Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).", CommandOptionType.SingleValue);
             var inputFile = command.Argument("InputPcapFile",
                 "An input packet capture file to analyze.", false);
 
@@ -41,11 +41,36 @@ namespace Distance.Engine
                 {
                         throw new Microsoft.Extensions.CommandLineUtils.CommandParsingException(command, "Required options '-profile' is missing.");
                 }
-                m_diagnosticProfileAssembly = Assembly.LoadFrom(profileAssemblyOption.Value());
+                m_diagnosticProfileAssembly = Assembly.LoadFrom(GetAssemblyPath(profileAssemblyOption.Value()));
                 return AnalyzeInput(inputFile.Value);
             });            
         }
 
+        public static string GetAssemblyPath(string profileName)
+        {
+            if (!profileName.EndsWith(".dll"))
+            {
+                profileName += ".dll";
+            }
+
+            var fullpath = Path.GetFullPath(profileName);
+            if (File.Exists(fullpath))
+            {
+                return Path.GetFullPath(profileName);
+            }
+            var profilePathsString = Environment.GetEnvironmentVariable("DISTANCE_PROFILES");
+            if (profilePathsString != null)
+            {
+                var profilePaths = profilePathsString.Split(Path.PathSeparator);
+                foreach(var path in profilePaths)
+                {
+                    fullpath = Path.Combine(path, profileName);
+                    if (File.Exists(fullpath)) return fullpath;                        
+                }
+            }
+            
+            throw new FileNotFoundException($"Could not locate assembly file '{profileName}'.", profileName);
+        }
 
         public static IEnumerable<string> RunShark(string inputfile, string filter, params string[] fields)
         {
