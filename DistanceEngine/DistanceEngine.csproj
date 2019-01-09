@@ -19,8 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DistanceRules\DistanceRules.csproj" />
-    <ProjectReference Include="..\DistanceShark\DistanceShark.csproj" />
+    <ProjectReference Include="..\Distance.Runtime\Distance.Runtime.csproj" />
     <ProjectReference Include="..\DistanceUtils\DistanceUtils.csproj" />
   </ItemGroup>
 

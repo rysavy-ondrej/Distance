@@ -12,7 +12,8 @@ namespace Distance.Engine.Builder
         private readonly DiagnosticSpecification.Derived m_derived;
         public DerivedClassBuilder(DiagnosticSpecification.Derived derived) : base (derived.Name)
         {
-            m_derived = derived;           
+            m_derived = derived;
+            TypeDeclaration.BaseTypes.Add(typeof(Distance.Runtime.DistanceDerived));
             foreach (var field in derived.Fields)
             {
                 TypeDeclaration.Members.Add(EmitFieldDeclaration(field));

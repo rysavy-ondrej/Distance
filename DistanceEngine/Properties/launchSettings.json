@@ -12,8 +12,8 @@
     },
     "run tests.pcap": {
       "commandName": "Project",
-      "commandLineArgs": "run test.pcap",
-      "workingDirectory": "C:\\GitHub\\Distance\\DistanceEngine\\Data"
+      "commandLineArgs": "run -profile ..\\Profiles\\Diagnostics.Soho\\bin\\Debug\\netstandard2.0\\Diagnostics.Soho.dll  Pcaps\\test.pcap",
+      "workingDirectory": "C:\\GitHub\\Distance\\TestData"
     },
     "build lan.yaml": {
       "commandName": "Project",

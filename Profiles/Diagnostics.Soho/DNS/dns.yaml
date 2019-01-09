@@ -1,0 +1,79 @@
+meta:
+  namespace: Distance.Diagnostics.Dns
+facts:
+  - name: DnsPacket
+    where: dns
+    select: 
+      - int32     frame.number
+      - string    ip.src
+      - string    ip.dst
+      - string    dns.id
+      - boolean   dns.flags.response
+      - int32     dns.flags.rcode
+      - double    dns.time
+      - string    dns.qry.name
+derived:
+  - name: QueryResponse
+    fields: 
+      - DnsPacket query
+      - DnsPacket response
+
+  - name: ResponseError
+    fields:
+      - DnsPacket query
+      - DnsPacket response
+
+  - name: NoResponse
+    fields: 
+      - DnsPacket query
+
+  - name: LateResponse
+    fields:
+      - DnsPacket query
+      - DnsPacket response
+      - double    delay
+
+  - name: DnsServer
+    fields:
+      - string    ip.address
+
+events:
+  - name:         DnsServerDownEvent
+    severity:     error
+    description:  "DNS server is not working. It is because the server is down or the specified address does not represent a valid DNS server."
+    message:      "DNS server {server.ip.address} is down or invalid."
+    fields:
+      - DnsServer server
+      
+rules:
+  - name: RequestResponse
+    when:
+      match:
+        - DnsPacket query => query.dns.flags.response == 0
+        - DnsPacket response => response.dns.flags.response == 1 && query.dns.id == response.dns.id
+    then:
+      yield: QueryResponse(query = query, response = response)
+    
+  - name: ResponseError
+    description: "The rule is fired for all DNS responses with error code != 0."
+    when:
+      match: 
+        - QueryResponse qr => qr.response.dns.flags.rcode != 0
+    then:  
+      error: "DNS query {qr.query} yields to error response {qr.response}. Response time was {qr.response.dns.time}s."
+
+  - name: NoResponse
+    when:
+      match:
+        - DnsPacket query => query.dns.flags.response == 0
+      not:
+        - DnsPacket x => x.dns.flags.response == 1 && x.dns.id == query.dns.id
+    then: 
+      error: "No Response for DNS query {query} found."
+
+  - name: DelayedResponse
+    when:
+      match:
+        - QueryResponse qr => qr.response.dns.time > 5
+    then:
+      warn: "Response time is high ({qr.response.dns.time}s) for DNS query {qr.query} and response {qr.response}."

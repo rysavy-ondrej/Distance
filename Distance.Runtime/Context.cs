@@ -9,27 +9,31 @@ namespace Distance.Runtime
 {
     public static class Context
     {
-        static readonly string DistanceLog = "DISTANCE.LOGS";
-        static readonly string DistanceEvt = "DISTANCE.EVTS";
+        static public readonly string DistanceOutputLoggerName = "DISTANCE.LOGS";
+        static public readonly string DistanceEventLoggerName = "DISTANCE.EVTS";
 
 
         static Logger m_logger; 
         static Logger m_eventLogger;
 
-        public static void ConfigureLog(string filename)
+        public static void ConfigureLog(string logfilePath, string eventfilePath, bool eventToConsole = false)
         {
             var config = new NLog.Config.LoggingConfiguration();
 
-            var logfile = new NLog.Targets.FileTarget(DistanceLog) { FileName = filename };
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile, DistanceLog);
+            var logfile = new NLog.Targets.FileTarget(DistanceOutputLoggerName) { FileName = logfilePath };
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, logfile, DistanceOutputLoggerName);
 
-            var logconsole = new NLog.Targets.ColoredConsoleTarget(DistanceEvt);
-            config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole, DistanceEvt);
+            var evtfile = new NLog.Targets.FileTarget(DistanceOutputLoggerName) { FileName = eventfilePath };
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, evtfile, DistanceEventLoggerName);
+
+            var logconsole = new NLog.Targets.ColoredConsoleTarget(DistanceEventLoggerName);
+            if (eventToConsole)
+                config.AddRule(LogLevel.Warn, LogLevel.Fatal, logconsole, DistanceEventLoggerName);
 
             LogManager.Configuration = config;
 
-            m_logger = LogManager.GetLogger(DistanceLog);
-            m_eventLogger = LogManager.GetLogger(DistanceEvt);
+            m_logger = LogManager.GetLogger(DistanceOutputLoggerName);
+            m_eventLogger = LogManager.GetLogger(DistanceEventLoggerName);
         }
 
         /// <summary>

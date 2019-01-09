@@ -14,6 +14,8 @@ namespace Distance.Engine.Builder
         public FactClassBuilder(DiagnosticSpecification.Fact fact) : base (fact.Name)
         {
             m_fact = fact;
+            TypeDeclaration.BaseTypes.Add(typeof(Distance.Runtime.DistanceFact));
+
             foreach (var field in fact.Select)
             {
                 TypeDeclaration.Members.Add(EmitFieldDeclaration(field));
