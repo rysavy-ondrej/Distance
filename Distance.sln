@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceRules", "DistanceRules\DistanceRules.csproj", "{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceEngine", "DistanceEngine\DistanceEngine.csproj", "{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceShark", "DistanceShark\DistanceShark.csproj", "{CB00DAF7-B10A-4AC8-AAA6-5A226933EBEA}"
@@ -16,11 +14,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Vagrantfile = Vagrantfile
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Distance.Runtime", "Distance.Runtime\Distance.Runtime.csproj", "{3380153C-3125-4B7F-A550-865F6517159E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceRuntime", "DistanceRuntime\DistanceRuntime.csproj", "{3380153C-3125-4B7F-A550-865F6517159E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Profiles", "Profiles", "{D863AF84-A428-49B0-B10C-714B688D5D80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diagnostics.Soho", "Profiles\Diagnostics.Soho\Diagnostics.Soho.csproj", "{2C87E663-DFB3-43E4-A1C6-D20A083554FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagnostics.Soho", "Profiles\Diagnostics.Soho\Diagnostics.Soho.csproj", "{2C87E663-DFB3-43E4-A1C6-D20A083554FE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestData", "TestData", "{BADBB87B-56B4-47BE-9434-F96A828B4653}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcaps", "Pcaps", "{93174194-A8AD-480C-BB19-A22DAE4A996E}"
+	ProjectSection(SolutionItems) = preProject
+		TestData\Pcaps\test.pcap = TestData\Pcaps\test.pcap
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +33,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F0DF441-70C3-40DF-958C-0F754ECAFA7F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -58,6 +59,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2C87E663-DFB3-43E4-A1C6-D20A083554FE} = {D863AF84-A428-49B0-B10C-714B688D5D80}
+		{93174194-A8AD-480C-BB19-A22DAE4A996E} = {BADBB87B-56B4-47BE-9434-F96A828B4653}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {44B6B909-7C95-4381-BB1C-28D636D53A97}

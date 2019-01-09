@@ -19,17 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Distance.Runtime\Distance.Runtime.csproj" />
+    <ProjectReference Include="..\DistanceRuntime\DistanceRuntime.csproj" />
     <ProjectReference Include="..\DistanceUtils\DistanceUtils.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Data\test.pcap">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\test.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Distance.Engine
 {
@@ -16,7 +17,8 @@ namespace Distance.Engine
     {
         private Program.Options options;
 
-        private Assembly diagnosticProfileAssembly;
+        private Assembly m_diagnosticProfileAssembly;
+        private int m_degreeOfParallelism = -1;
         public RunCommand(Program.Options options)
         {
             this.options = options;
@@ -27,17 +29,19 @@ namespace Distance.Engine
         {
             command.Description = "Run a distance ruleset against the specified input file(s).";
             command.HelpOption("-?|-help");
-            var profileAssembly = command.Option("-profile", "Specifies assembly that contains a diagnostic profile.", CommandOptionType.SingleValue);
+            var profileAssemblyOption = command.Option("-profile", "Specifies assembly that contains a diagnostic profile.", CommandOptionType.SingleValue);
+            var parallelOption = command.Option("-parallel", "Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).", CommandOptionType.SingleValue);
             var inputFile = command.Argument("InputPcapFile",
                 "An input packet capture file to analyze.", false);
 
             command.OnExecute(() =>
             {
-                if (!profileAssembly.HasValue())
+                if (parallelOption.HasValue()) m_degreeOfParallelism = Int32.Parse(parallelOption.Value());
+                if (!profileAssemblyOption.HasValue())
                 {
                         throw new Microsoft.Extensions.CommandLineUtils.CommandParsingException(command, "Required options '-profile' is missing.");
                 }
-                diagnosticProfileAssembly = Assembly.LoadFrom(profileAssembly.Value());
+                m_diagnosticProfileAssembly = Assembly.LoadFrom(profileAssemblyOption.Value());
                 return AnalyzeInput(inputFile.Value);
             });            
         }
@@ -107,25 +111,14 @@ namespace Distance.Engine
             sw.Start();
 
             var repository = new RuleRepository();
-            Console.Write($"Loading rules from assembly '{diagnosticProfileAssembly.FullName}'...");
-            repository.Load(x => x.From(Assembly.GetExecutingAssembly(), diagnosticProfileAssembly));
+            Console.Write($"Loading rules from assembly '{m_diagnosticProfileAssembly.FullName}'...");
+            repository.Load(x => x.From(Assembly.GetExecutingAssembly(), m_diagnosticProfileAssembly));
             Console.WriteLine($"ok [{sw.Elapsed}].");
             foreach(var rule in repository.GetRules())
             {
                 logger.Info($"Rule: name={rule.Name}, priority = {rule.Priority}");
             }
 
-            // TODO: Turn the following block to Fact Loader implementation:
-            // Facts definitions are stored in yaml file definition.
-            //
-            // The compiler generates Domain files for facts. 
-            //
-            // To load facts we search assemblies for all facts then apply the 
-            // filter and generate loaders.
-            //
-            //
-            //
-            //
             sw.Restart();
             Console.Write("Compiling rules...");
             var factory = repository.Compile();
@@ -140,27 +133,18 @@ namespace Distance.Engine
 
             sw.Restart();
 
-            
-            
-            var facts = FindDerivedTypes(diagnosticProfileAssembly, typeof(DistanceFact));
+            var facts = FindDerivedTypes(m_diagnosticProfileAssembly, typeof(DistanceFact));
 
-            foreach(var factType in facts)
+            Console.WriteLine($"Loading facts, using {(m_degreeOfParallelism == -1 ? "all" : m_degreeOfParallelism.ToString() )} thread(s):");
+            Parallel.ForEach(facts, new ParallelOptions() { MaxDegreeOfParallelism = m_degreeOfParallelism }, (factType) =>
             {
-                var filter = (String)factType.GetField("Filter").GetValue(null);
-                var fields = (string[])factType.GetField("Fields").GetValue(null);
-                var createMethod = factType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
-                Console.Write($"Loading packets from '{pcapPath}', filter='{filter}'...");
-                var factObjects = LoadFacts(pcapPath, filter, fields, f => createMethod.Invoke(null, new[] { f })).ToList();
-                Console.WriteLine($"ok [{sw.Elapsed}].");
-                sw.Restart();
-                Console.Write($"Inserting '{factType.Name}' facts ({factObjects.Count}) to the session...");
-                session.InsertAll(factObjects);
-                Console.WriteLine($"ok [{sw.Elapsed}].");
-            }
+                ExtractTransformLoad(factType, pcapPath, session);
+            });
 
+            Console.WriteLine($"All facts loaded [{sw.Elapsed}].");
             sw.Restart();
             Console.Write("Waiting for completion...");
-            //Start match/resolve/act cycle
+            // start match/resolve/act cycle
             while (true)
             {
                 var fired = session.Fire(100);
@@ -173,5 +157,20 @@ namespace Distance.Engine
             return 0;
         }
 
+        private void ExtractTransformLoad(Type factType, string pcapPath, ISession session)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            var filter = (string)factType.GetField("Filter").GetValue(null);
+            var fields = (string[])factType.GetField("Fields").GetValue(null);
+            var createMethod = factType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
+            Console.WriteLine($"  Loading packets from '{pcapPath}', filter='{filter}'...");
+            var factObjects = LoadFacts(pcapPath, filter, fields, f => createMethod.Invoke(null, new[] { f })).ToList();
+            Console.WriteLine($"  ok [{sw.Elapsed}].");
+            sw.Restart();
+            Console.WriteLine($"  Inserting '{factType.Name}' facts ({factObjects.Count}) to the session.");
+            session.InsertAll(factObjects);
+            Console.WriteLine($"  ok [{sw.Elapsed}].");
+        }
     }
 }
