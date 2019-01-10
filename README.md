@@ -33,7 +33,7 @@ The `run` command runs the diagnostic engine for provided packet source file.
 
 ### Run Command
 The program loads the input pcap, executes `tshark` for decoding packets and applies diagnostic rules. 
-The output containing identified issues is written to `.log` file. See bellow for the examples.
+The full diagnostic log output is written to `.log` file. The generated events are written to '.evt' file.
 
 ```
 Usage: distance run [arguments] [options]
@@ -42,12 +42,31 @@ Arguments:
   InputPcapFile  An input packet capture file to analyze.
 
 Options:
-  -?|-help  Show help information.
-  
+  -?|-help                Show help information
+  -profile <PROFILENAME>  Specifies assembly that contains a diagnostic profile.
+  -parallel <NUMBER>      Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).
 ```
 
+To run the diagnostics, it is necessary to specify the diagnostic profile. The profile is identified by the name of the assembly implementing diagnostic rules. 
+The application searches for the profile assemblies in the following order:
+* Current working directory 
+* All directories set in environment variable `DISTANCE_PROFILES`
+* Directory of the executable file
+
+
 ### Build Command
-Not implemented yet :(.
+Build command is used to generate C# source code from the diagnostic rule definitions. 
+
+```
+Usage: distance build [arguments] [options]
+
+Arguments:
+  SourceYamlProject  A file with the source yaml ruleset project. Multiple values can be specified.
+
+Options:
+  -?|-help  Show help information
+```
+
 
 
 
@@ -59,28 +78,33 @@ $ vagrant ssh
 [vagrant@localhost]$ mkdir pcap
 [vagrant@localhost]$ cd pcap
 [vagrant@localhost]$ wget www.fit.vutbr.cz/~rysavy/distance.datasets/testbed-16.pcap
-[vagrant@localhost]$ distance run testbed-16.pcap
-Loading and decoding packets from '/home/vagrant/pcaps/testbed-16.pcap'...ok [00:00:01.4510746].
-Loading rules from assembly 'DistanceRules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'...ok [00:00:00.0679699].
-Compiling rules...ok [00:00:00.0764481].
-Creating a session...ok [00:00:00.0151823].
-Inserting facts (306) to the session...ok [00:00:00.0392679].
-Waiting for completion......done [00:00:00.0707294].
-Diagnostic output written to '/home/vagrant/pcaps/testbed-16.log'.
+[vagrant@localhost]$ distance run -profile Diagnostics.Soho testbed-16.pcap
+Loading rules from assembly 'Diagnostics.Soho, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null', Location='/distance/artifacts/Diagnostics.Soho.dll'...ok [00:00:00.0949057].
+Compiling rules...ok [00:00:00.0918322].
+Creating a session...ok [00:00:00.0150605].
+Loading facts, using all thread(s):
+  Loading packets from '/home/vagrant/pcaps/testbed-16.pcap', filter='ip'...
+  Loading packets from '/home/vagrant/pcaps/testbed-16.pcap', filter='icmp'...
+  Loading packets from '/home/vagrant/pcaps/testbed-16.pcap', filter='dns'...
+  ok [00:00:04.1976993].
+  Inserting 'IcmpPacket' facts (0) to the session.
+  ok [00:00:00.0046929].
+  ok [00:00:04.8154225].
+  Inserting 'IpPacket' facts (22109) to the session.
+  ok [00:00:00.1061313].
+  ok [00:00:04.0939339].
+  Inserting 'DnsPacket' facts (306) to the session.
+  ok [00:00:00.0378132].
+All facts loaded [00:00:05.1743015].
+Waiting for completion.......done [00:00:00.0395075].
+Diagnostic Log written to '/home/vagrant/pcaps/testbed-16.log'.
+Diagnostic Events written to '/home/vagrant/pcaps/testbed-16.evt'.
 [vagrant@localhost pcaps]$
 ```
+The output is written to `testbed-16.log`. Its content consists of lines each giving information about a single issue found in the communication. These issues are low level 
+information that is reported by diagnostic rules. 
 
-The output is written to `testbed-16.log`. Its content consists of 58 lines each giving information about a single issue found in DNS communication,
-for example:
-
-```
-...
-2018-12-14 12:16:43.5651|ERROR|DISTANCE|Dns.NoResponse: No Response for DNS query [Dns: frame.number=22120 ip.src=192.168.5.122 ip.dst=224.0.0.251 dns.flags.response=0 dns.id=0x00000000 dns.qry.name='105.1.168.192.in-addr.arpa' dns.time= dns.flags.rcode=] found.
-
-2018-12-14 12:16:43.5726|ERROR|DISTANCE|Dns.ResponseError: DNS query [Dns: frame.number=6410 ip.src=192.168.2.107 ip.dst=192.168.5.122 dns.flags.response=0 dns.id=0x0000d52c dns.qry.name='wpad.testbed.lan' dns.time= dns.flags.rcode=] yields to error NXDOMAIN (Domain name does not exist) . DNS response [Dns: frame.number=6411 ip.src=192.168.5.122 ip.dst=192.168.2.107 dns.flags.response=1 dns.id=0x0000d52c dns.qry.name='wpad.testbed.lan' dns.time=0.000540000 dns.flags.rcode=3]. Response time was 0.000540000s.
-...
-```
-
+The results of the diagnostics is stored in `testbed-16.evt` file. This file contains information about the problems found and possible reasons. 
 
 While it is still too early to evaluate the performance, the following table contains some preliminary results measured for the DNS diagnostic ruleset (just 4 rules):
 
@@ -98,7 +122,7 @@ While it is still too early to evaluate the performance, the following table con
 | --------------- | ------------ | ---------------------------------------------------  | -------------------------------------- |
 | NRules          | included     | https://github.com/NRules/NRules                     | MIT Licence                            |
 | TShark          | standalone   | https://www.wireshark.org/docs/man-pages/tshark.html | GNU GPL                                |
-| SharpPcap       | included     | https://github.com/chmorgan/sharppcap                | GNU Lesser General Public License v3.0 |
-| PacketDotNet    | included     | https://github.com/chmorgan/packetnet                | GNU Lesser General Public License v3.0 |
+| SharpPcap       | included     | https://github.com/chmorgan/sharppcap                | GNU Lesser General Public License v3.0 | 
+| PacketDotNet    | included     | https://github.com/chmorgan/packetnet                | GNU Lesser General Public License v3.0 | 
 | Newtonsoft.Json | included     | https://www.newtonsoft.com/json                      | MIT Licence                            |
 | NLog            | included     | https://nlog-project.org/                            | BSD license                            | 
