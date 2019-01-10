@@ -1,2 +1,9 @@
 #!/bin/bash
-dotnet run --project /distance/DistanceEngine/DistanceEngine.csproj $@
+if [ -e /distance/artifacts/DistanceEngine.dll ]
+then
+    dotnet /distance/artifacts/DistanceEngine.dll $@
+else
+    echo "Distance not built. Run /distance/build.sh first."
+fi
+
+

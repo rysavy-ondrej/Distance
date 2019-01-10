@@ -345,3 +345,5 @@ ASALocalRun/
 .vagrant/machines/default/hyperv/vagrant_cwd
 .vagrant/machines/default/hyperv/Virtual Hard Disks/disk.vhd
 .vagrant/rgloader/loader.rb
+TestData/Pcaps/test.evt
+*.evt
