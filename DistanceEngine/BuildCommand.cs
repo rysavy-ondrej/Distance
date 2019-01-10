@@ -28,7 +28,7 @@ namespace Distance.Engine
         public void Configuration(CommandLineApplication command)
         {
             command.Description = "Build a distance ruleset from the source yaml project.";
-            command.HelpOption("-?|-help");
+            command.HelpOption("--|-help");
 
             var sourceProject = command.Argument("SourceYamlProject",
                 "A file with the source yaml ruleset project. Multiple values can be specified.",

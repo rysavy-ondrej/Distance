@@ -28,7 +28,7 @@ namespace Distance.Engine
         public void Configuration(CommandLineApplication command)
         {
             command.Description = "Run a distance ruleset against the specified input file(s).";
-            command.HelpOption("-?|-help");
+            command.HelpOption("--|-help");
             var profileAssemblyOption = command.Option("-profile <PROFILENAME>", "Specifies assembly that contains a diagnostic profile.", CommandOptionType.SingleValue);
             var parallelOption = command.Option("-parallel <NUMBER>", "Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).", CommandOptionType.SingleValue);
             var inputFile = command.Argument("InputPcapFile",
@@ -54,10 +54,8 @@ namespace Distance.Engine
             }
 
             var fullpath = Path.GetFullPath(profileName);
-            if (File.Exists(fullpath))
-            {
-                return Path.GetFullPath(profileName);
-            }
+            if (File.Exists(fullpath)) return Path.GetFullPath(profileName);
+
             var profilePathsString = Environment.GetEnvironmentVariable("DISTANCE_PROFILES");
             if (profilePathsString != null)
             {
@@ -68,7 +66,10 @@ namespace Distance.Engine
                     if (File.Exists(fullpath)) return fullpath;                        
                 }
             }
-            
+
+            fullpath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), profileName);
+            if (File.Exists(fullpath)) return fullpath;
+
             throw new FileNotFoundException($"Could not locate assembly file '{profileName}'.", profileName);
         }
 
@@ -136,7 +137,7 @@ namespace Distance.Engine
             sw.Start();
 
             var repository = new RuleRepository();
-            Console.Write($"Loading rules from assembly '{m_diagnosticProfileAssembly.FullName}'...");
+            Console.Write($"Loading rules from assembly '{m_diagnosticProfileAssembly.FullName}', Location='{m_diagnosticProfileAssembly.Location}'...");
             repository.Load(x => x.From(Assembly.GetExecutingAssembly(), m_diagnosticProfileAssembly));
             Console.WriteLine($"ok [{sw.Elapsed}].");
             foreach(var rule in repository.GetRules())

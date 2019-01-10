@@ -18,7 +18,7 @@ namespace Distance.Engine
             {
                 Name = "distance"
             };
-            commandLineApplication.HelpOption("-?|-help");
+            commandLineApplication.HelpOption("--|-help");
 
             var options = new Options
             {
