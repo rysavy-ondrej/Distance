@@ -16,31 +16,36 @@ Such problems include:
 In the rest of this document, we will show how to create diagnostic procedures for three of four presented problems.
 
 ## Detecting Duplicate IP Address
-The duplicate address problem is observable in the network communication. If two devices has configured the same IP address 
-we can see packets sourced from the single IP address but having different hardware addresses. 
-
-This condition is easily expressible using the following fact rule:
+The duplicate address problem is observable in the network communication. If two devices have been configured with the same IP address 
+we can see packets sourced from the single IP address but having different hardware addresses. To test we first generates objects 
+representing IP-MAC address mapping:
 
 ```yaml
-- rule:
-    id: DuplicateAddress  
-    facts:
-        - packet1: ip
-        - packet2: ip
-    asserts:
-        - packet1[ip.src] == packet2[ip.src]
-        - packet1[eth.src] != packet2[eth.src]
+derived:
+  - name: AddressMapping
+    description: Carries information on mapping between ip and mac addresses
+    fields:       
+      - string ip.addr
+      - string eth.addr
+
+RULE
 ```
 
-This rule tests all IP packets trying to find a pair that indicates that two hosts have configured the same IP address.
+Then it is easy to check if there are two MAC addresses associated with a single IP address:
 
-```linq
-from _packet1 in source.Where(Expr("ip"))
-from _packet2 in source.Where(Expr("ip"))
-where   _packet1.Select("ip.src") == _packet2.Select("ip.src")
-     && _packet1.Select("eth.src") != _packet2.Select("eth.src")
-select new (packet1: _packet1, packet2: _packet2)
+```yaml
+events:    
+  - name: DuplicateAddressDetected
+    severity:     error
+    description:  "Duplicate IP address assignment detected. Two or more MAC addresses share the same IP address."
+    message:      "Two or more network hosts has assigned the same network address {ip.address}."
+    fields:
+      - string    ip.address
+      - string[]  eth.addresses
+
+RULE
 ```
+
 
 ## Detecting Configuration Problems
 Now, we consider the case when there is a host machine with incorrect static IP configuration.

@@ -6,7 +6,8 @@ using System.Collections.Generic;
 namespace Distance.Diagnostics.Dns
 {
 
-    public class CollectDnsServerRule : Rule
+    [Name("Dns.CollectServers"), Description("The rule collects information about available DNS servers.")]
+    public class CollectDnsServerRule : DistanceRule
     {
         public override void Define()
         {
@@ -19,7 +20,7 @@ namespace Distance.Diagnostics.Dns
     }
 
     [Name("Dns.RequestResponse"), Description("The rule identifies pairs of request and response messages.")]
-    public class DnsRequestResponseRule : Rule
+    public class DnsRequestResponseRule : DistanceRule
     {
         public override void Define()
         {
@@ -53,7 +54,7 @@ namespace Distance.Diagnostics.Dns
     
 
     [Name("Dns.ResponseError"), Description("The rule is fired for all DNS responses with error code != 0.")]
-    public class DnsResponseErrorRule : Rule
+    public class DnsResponseErrorRule : DistanceRule
     {
         static IDictionary<DnsResponseCode, string> ResponseCodeDescription = new Dictionary<DnsResponseCode, string>
         {
@@ -83,7 +84,7 @@ namespace Distance.Diagnostics.Dns
 
 
     [Name("Dns.NoResponse"), Description("The rule finds DNS requests without responses.")]
-    public class NoResponseRule : Rule
+    public class NoResponseRule : DistanceRule
     {
         public override void Define()
         {
@@ -99,7 +100,7 @@ namespace Distance.Diagnostics.Dns
     }
 
     [Name("Dns.DelayedResponse"), Description("The rule finds DNS replies that have latency greater than 1s.")]
-    public class DelayedResponseRule : Rule
+    public class DelayedResponseRule : DistanceRule
     {
         public override void Define()
         {
@@ -112,7 +113,10 @@ namespace Distance.Diagnostics.Dns
         }
     }
 
-    public class ServerUnresponsive : Rule
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ServerUnresponsive : DistanceRule
     {
         public override void Define()
         {
@@ -121,9 +125,17 @@ namespace Distance.Diagnostics.Dns
                 .Match(() => server)
                 .Not<QueryResponse>(other => server.IpAddress == other.Query.IpDst);
             Then()
-                .Yield(_ => new DnsServerDownEvent { Server = server });
+                .Do(ctx => ctx.TryInsert(new DnsServerDownEvent { Server = server }));
         }
-    } 
- 
+    }
+
+    public class ServerUnreliable : DistanceRule
+    {
+        public override void Define()
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
 }
  

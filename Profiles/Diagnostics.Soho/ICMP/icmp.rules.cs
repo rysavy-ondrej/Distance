@@ -3,7 +3,7 @@ using NRules.Fluent.Dsl;
 
 namespace Distance.Diagnostics.Icmp
 {
-    public class TtlExpiredRule : Rule
+    public class TtlExpiredRule : DistanceRule
     {
         public override void Define()
         {
@@ -16,7 +16,7 @@ namespace Distance.Diagnostics.Icmp
         }
     }
 
-    public class DestinationUnreachableRule : Rule
+    public class DestinationUnreachableRule : DistanceRule
     {
         public override void Define()
         {
