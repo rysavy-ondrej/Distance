@@ -49,3 +49,8 @@ For some quantifier, there are other possible combinations, for instance:
 
 ## Permanent vs. transient errors
 Some problems may be transient, which means that they disappear later.  
+
+## Events
+Considering `(case,scope,quantifier)` being the dimensions of the DNS error matrix, we identify the individual cases to be reported by the diagnostic procedure:
+
+* `(none, server, all)` - all queries sent to `server` have not got any response. This can be because of wrong DNS configuration or the server is temporary or permanently down. 
