@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="NLog" Version="4.5.11" />
-    <PackageReference Include="NRules" Version="0.8.4" />
+    <PackageReference Include="NRules" Version="0.9.0" />
   </ItemGroup>
 
 </Project>
