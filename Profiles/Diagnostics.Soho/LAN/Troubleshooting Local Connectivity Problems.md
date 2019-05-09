@@ -3,15 +3,26 @@
 This document provides demonstration of the DISTANCE Diagnostic Tool for troubleshooting local connectivity problems. 
 Such problems include:
 
-* Configuration problem - the (static) IP configuration of a device is incorrect. 
+* Configuration problem - the (static) IP configuration of a device is incorrect - IP address outside the LAN, incorrect mask, gateway server, or DNS server. 
 
 * DHCP or BOOTP issue - the system of dynamic address assignment is not working correctly.
 
 * Physical layer issue - there may be different reasons, for instance, cable is faulty or improperly connected,
-  wiring closet cross-connect is faulty or improperly connected, or hardware (interface or port) is faulty.
+  wiring closet cross-connect is faulty or improperly connected, or hardware (interface or port) is faulty - can we duplicate this from packet traces?
 
 * Duplicate IP address - the device has the same IP address as an another device within the network.
 
+* ARP related issues
+
+* Broadcast or multicast flooding
+
+
+
+## Testing environment
+
+To deonostrate the above mentioned problems, the virtual testbed was created. 
+The testbed represents a local network with a single gateway router that at the same time serves as DHCP and DNS servers. 
+Different endhost machines are employed in the network. 
 
 In the rest of this document, we will show how to create diagnostic procedures for three of four presented problems.
 
