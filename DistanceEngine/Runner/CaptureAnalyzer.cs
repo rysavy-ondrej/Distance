@@ -122,11 +122,13 @@ namespace Distance.Engine.Runner
 
         private void ExtractTransformLoad(Type factType, string pcapPath, ISession session)
         {
-            var sw = new Stopwatch();
-            sw.Start();
+
             var filter = (string)factType.GetField("Filter").GetValue(null);
             var fields = (string[])factType.GetField("Fields").GetValue(null);
             var factory = GetFactoryObject(factType);
+
+            var sw = new Stopwatch();
+            sw.Start();
             Console.WriteLine($"  Loading packets from '{pcapPath}', filter='{filter}'...");
             var factObjects = FactsLoader.Load(pcapPath, filter, fields, factory.Create).ToList();
             Console.WriteLine($"  ok [{sw.Elapsed}].");
@@ -134,6 +136,7 @@ namespace Distance.Engine.Runner
             Console.WriteLine($"  Inserting '{factType.Name}' facts ({factObjects.Count}) to the session.");
             session.InsertAll(factObjects);
             Console.WriteLine($"  ok [{sw.Elapsed}].");
+            sw.Stop();
         }
         public IEnumerable<Type> FindDerivedTypes(Assembly assembly, Type baseType)
         {
