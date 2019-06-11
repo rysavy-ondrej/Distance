@@ -44,7 +44,14 @@ events:
     message:      "DNS server {server.ip.address} is down or invalid."
     fields:
       - DnsServer server
-      
+
+  - name:         DnsServerUnreliableEvent
+    severity:     error
+    description:  "DNS server does not answer to all queries. It may be too busy."
+    message:      "DNS server {server.ip.address} is busy."
+    fields:
+      - DnsServer server
+   
 rules:
   - name: RequestResponse
     when:

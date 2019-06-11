@@ -1,0 +1,27 @@
+﻿meta:
+  namespace: Distance.Diagnostics.Arp
+facts:
+  - name: ArpPacket
+    where: arp
+    select: 
+      - int32     frame.number
+      - double    frame.time_relative
+      - string    eth.src 
+      - string    eth.dst 
+      - int32     arp.opcode
+      - string    arp.src.hw
+      - string    arp.dst.hw
+      - string    arp.src.proto_ipv4
+      - string    arp.dst.proto_ipv4        
+
+derived:
+  - name: ArpRequestReply
+    fields: 
+      - ArpPacket request
+      - ArpPacket reply
+
+  - name: ArpAddressMapping
+    description: Carries information on mapping between ip and mac addresses observed from ARP communication.
+    fields:       
+      - string ip.addr
+      - string eth.addr

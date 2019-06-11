@@ -63,7 +63,7 @@ namespace Distance.Engine.Builder
                 ReturnType = classType,
                 Attributes = MemberAttributes.Static | MemberAttributes.Public,
             };
-
+            method.Parameters.Add(new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(Func<string,string,string>)), "mapper"));
             method.Parameters.Add(new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(string[])), "values"));
 
             var newObj = new CodeVariableDeclarationStatement
@@ -82,7 +82,9 @@ namespace Distance.Engine.Builder
                     Right = new CodeMethodInvokeExpression(
                         new CodeMethodReferenceExpression
                         {
-                            TargetObject = new CodeArrayIndexerExpression(new CodeVariableReferenceExpression("values"), new CodePrimitiveExpression(i)),
+                            TargetObject = 
+                                new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("mapper"), nameof(Func<object>.Invoke),
+                                    new CodePrimitiveExpression(f.FieldName) ,new CodeArrayIndexerExpression(new CodeVariableReferenceExpression("values"), new CodePrimitiveExpression(i))),
                             MethodName = $"To{f.FieldType.ToCamelCase()}"
                         })
                 });

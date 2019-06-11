@@ -173,5 +173,30 @@ namespace Distance.Engine.Builder
                     new CodePropertyReferenceExpression(codeThat, field.FieldName.ToCamelCase())
                 );
         }
+
+        protected CodeExpression CallToStringExpression(CodeExpression arg)
+        {
+            return new CodeMethodInvokeExpression
+                (
+                    new CodeMethodReferenceExpression
+                    {
+                        TargetObject = new CodeTypeReferenceExpression(typeof(StringUtils)),
+                        MethodName = nameof(StringUtils.ToString)
+                    },
+                    arg
+                );
+        }
+
+        protected Func<(Location, string),CodeExpression> GetReferenceExpression(IList<DiagnosticSpecification.Field> fields)
+        {
+            return locpath =>
+            {
+                var reference = locpath.Item2.Trim('{', '}');
+                // TODO: analyze the rest of the path: we need access to type declarations...            
+                var field = fields.FirstOrDefault(f => reference.StartsWith(f.FieldName));
+                if (field == null) throw new BuildException(locpath.Item1,$"Field '{reference}' is not defined for the given object.", null);
+                return new CodePropertyReferenceExpression(new CodeThisReferenceExpression(), field.FieldName.ToCamelCase());
+            };
+        }
     }
 }

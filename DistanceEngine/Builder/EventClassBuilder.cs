@@ -51,14 +51,14 @@ namespace Distance.Engine.Builder
                 Attributes = MemberAttributes.Public | MemberAttributes.Override
             };
 
-            var propertyReferences = new List<string>();
+            var propertyReferences = new List<(Location,string)>();
             string Matcher(Match match)
             {
-                propertyReferences.Add(match.Value);
+                propertyReferences.Add((Location.Empty, match.Value));
                 return $"{{{propertyReferences.Count - 1}}}";
             }
 
-            var formatStringArguments = propertyReferences.Select(GetReferenceExpression);
+            var formatStringArguments = propertyReferences.Select(GetReferenceExpression(m_event.Fields)).Select(CallToStringExpression);
 
             var formatString = Regex.Replace(m_event.Message, @"{[^}]+}", new MatchEvaluator(Matcher));
 
@@ -68,7 +68,7 @@ namespace Distance.Engine.Builder
                                     new CodeMethodReferenceExpression
                                     {
                                         TargetObject = new CodeTypeReferenceExpression(typeof(String)),
-                                        MethodName = "Format"
+                                        MethodName = nameof(String.Format)
                                     },
                                     formatStringArguments.Prepend(new CodePrimitiveExpression(formatString)).ToArray()
                                  );
@@ -76,14 +76,6 @@ namespace Distance.Engine.Builder
 
             property.GetStatements.Add(new CodeMethodReturnStatement(formatMethod));
             return property;
-        }
-
-        private CodeExpression GetReferenceExpression(string path)
-        {
-            var reference = path.Trim('{', '}');
-            // TODO: analyze the rest of the path: we need access to type declarations...            
-            var field = m_event.Fields.First(f => reference.StartsWith(f.FieldName));
-            return new CodePropertyReferenceExpression(new CodeThisReferenceExpression(), field.FieldName.ToCamelCase());
         }
 
         CodeMemberProperty EmitSeverityPropertyDeclaration()

@@ -1,5 +1,6 @@
 ﻿meta:
   namespace: Distance.Diagnostics.Lan
+
 facts:
   - name: IpPacket
     where: ip
@@ -9,20 +10,56 @@ facts:
       - string    eth.dst
       - string    ip.src
       - string    ip.dst
+
+derived: 
+  - name: IpEndpoint
+    description: Carries information about a single Internet end-point.
+    fields:       
+        - string ip.addr    
+
+  - name: EthEndpoint
+    description: Carries information about a single local end-point.
+    fields:       
+        - string eth.addr 
+
+  - name: GatewayCandidate
+    description: Represents a possible LAN gateway. 
+    fields:       
+      - string ip.addr
+      - string eth.addr
+
 derived:
   - name: AddressMapping
     description: Carries information on mapping between ip and mac addresses
     fields:       
       - string ip.addr
       - string eth.addr
+derived:
+  - name: LocalNetworkPrefix
+    fields: 
+      - string ip.network
+      - int32  ip.prefix
 
 events:    
-  - name: DuplicateAddressDetected
+  - name: IpAddressConflict
     severity:     error
     description:  "Duplicate IP address assignment detected. Two or more MAC addresses share the same IP address."
-    message:      "Two or more network hosts has assigned the same network address {ip.address}."
+    message:      "Two or more network hosts has assigned the same network address {ip.address}: {eth.addresses}."
     fields:
       - string    ip.address
       - string[]  eth.addresses
 
-      
+  - name: MultipleDefaultGateways 
+    severity:    warning 
+    description: "When multiple default gateways are used, connectivity to computers on remote networks may be lost."
+    message:     "Multiple default gateways are in use: {gateways}."
+    fields:
+      - string[]  gateways
+
+  - name: NetBtDuplicateName
+    severity:     error
+    description:  "A duplicate net bios name has been detected on the TCP network, see: http://kb.eventtracker.com/evtpass/evtpages/EventId_4319_NetBT_45449.asp"
+    message:      "A computer on the network with the same name exists."
+    fields: 
+      - string    host.name
+      - string[]  ip.addresses

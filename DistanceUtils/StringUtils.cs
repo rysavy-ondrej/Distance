@@ -21,5 +21,15 @@ namespace Distance.Utils
             var name2 = m_textInfo.ToTitleCase(fieldName).Replace(".", "");
             return name2;
         }
+        public static string ToString<T>(T value)
+        {
+            return value?.ToString()?? String.Empty;
+        }
+
+        public static string ToString<T>(T[] array)
+        {
+            if (array == null) return String.Empty;
+            return String.Join(",", array.Select(x => StringUtils.ToString(x)));
+        }
     }
 }

@@ -116,6 +116,7 @@ namespace Distance.Diagnostics.Dns
     /// <summary>
     /// 
     /// </summary>
+    [Name("Dns.ServerUnresponsive"), Description("Server does not response to any query from the local network.")]
     public class ServerUnresponsive : DistanceRule
     {
         public override void Define()
@@ -123,17 +124,25 @@ namespace Distance.Diagnostics.Dns
             DnsServer server = null;
             When()
                 .Match(() => server)
-                .Not<QueryResponse>(other => server.IpAddress == other.Query.IpDst);
+                .Not<QueryResponse>(qr => qr.Query.IpDst == server.IpAddress);
             Then()
                 .Do(ctx => ctx.TryInsert(new DnsServerDownEvent { Server = server }));
         }
     }
 
+    [Name("Dns.ServerUnreliable"), Description("Server response only to some of queries.")]
     public class ServerUnreliable : DistanceRule
     {
+
         public override void Define()
         {
-            throw new System.NotImplementedException();
+            DnsServer server = null;
+            When()
+                .Match(() => server)
+                .Match<QueryResponse>(qr => qr.Query.IpDst == server.IpAddress)
+                .Match<NoResponse>( nr => nr.Query.IpDst == server.IpAddress);
+            Then()
+                .Do(ctx => ctx.TryInsert(new DnsServerUnreliableEvent { Server = server }));
         }
     }
 

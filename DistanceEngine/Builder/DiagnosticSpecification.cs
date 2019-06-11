@@ -14,7 +14,13 @@ namespace Distance.Engine.Builder
     public static class DiagnosticSpecification
     {
 
-        public enum Severity { Debug, Information, Warning, Error } 
+        public enum Severity { Debug, Information, Warning, Error }
+
+
+        public class SyntaxNode
+        {
+            public Location Location { get; set; }
+        }
 
         public static Module DeserializeDocument(string path)
         {
@@ -33,16 +39,37 @@ namespace Distance.Engine.Builder
             return module;
         }
 
-        public class Module
+        public class Module : SyntaxNode
         {
+            List<Fact> _facts = new List<Fact>();
+            List<Derived> _derived = new List<Derived>();
+            List<Event> _events = new List<Event>();
+            List<Rule> _rules = new List<Rule>();
+
             public Meta Meta { get; set; }
-            public List<Fact> Facts { get; set; }
-            public List<Derived> Derived { get; set; }
-            public List<Event> Events { get; set; }
-            public List<Rule> Rules { get; set; }
+            public List<Fact> Facts
+            {
+                get => _facts;
+                set { _facts.AddRange(value); }
+            }
+            public List<Derived> Derived
+            {
+                get => _derived;
+                set { _derived.AddRange(value); }
+            }
+            public List<Event> Events
+            {
+                get => _events;
+                set { _events.AddRange(value); }
+            }
+            public List<Rule> Rules
+            {
+                get => _rules;
+                set { _rules.AddRange(value); }
+            }
         }
 
-        public class Meta
+        public class Meta : SyntaxNode
         {
             public string Namespace { get; set; }
             public string Description { get; set; }
@@ -53,7 +80,7 @@ namespace Distance.Engine.Builder
             }
         }
 
-        public class Fact
+        public class Fact : SyntaxNode
         {
             public string Name { get; set; }
             public string Description { get; set; }
@@ -65,7 +92,7 @@ namespace Distance.Engine.Builder
             }
         }
 
-        public class Derived
+        public class Derived : SyntaxNode
         {
             public string Name { get; set; }
             public string Description { get; set; }
@@ -76,7 +103,7 @@ namespace Distance.Engine.Builder
             }
         }
 
-        public class Event
+        public class Event : SyntaxNode
         {
             public string Name { get; set; }
             public Severity Severity { get; set; }
@@ -89,7 +116,7 @@ namespace Distance.Engine.Builder
             }
         }
 
-        public class Field
+        public class Field : SyntaxNode
         {
             public string FieldType { get; set; }
             public string FieldName { get; set; }
@@ -99,7 +126,7 @@ namespace Distance.Engine.Builder
             }
         }
 
-        public class Rule
+        public class Rule : SyntaxNode
         {
             public string Name { get; set; }
             public string Description { get; set; }
@@ -110,12 +137,12 @@ namespace Distance.Engine.Builder
                 return $"Rule Name={Name}";
             }
         }
-        public class When
+        public class When : SyntaxNode
         {
             public List<Expression> Match { get; set; }
             public List<Expression> Not { get; set; }
         }
-        public class Then
+        public class Then : SyntaxNode
         {
             public string Yield { get; set; }
             public string Error { get; set; }
@@ -162,8 +189,16 @@ namespace Distance.Engine.Builder
                     {
                         throw new InvalidDataException("Invalid YAML content.");
                     }
+                    
                     parser.MoveNext();
-                    return Enum.Parse<Severity>(scalar.Value, true);
+                    if (Enum.TryParse<Severity>(scalar.Value, true, out var result))
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        throw new YamlDotNet.Core.SyntaxErrorException(parser.Current.Start, parser.Current.End, $"{scalar.Value} is not a valid severity value");
+                    }
                 }
                 catch (Exception e)
                 {
@@ -194,8 +229,9 @@ namespace Distance.Engine.Builder
                     {
                         throw new InvalidDataException("Invalid YAML content.");
                     }
+                    var location = new Location("", parser.Current.Start, parser.Current.End);
                     parser.MoveNext();
-                    return ParseFieldDeclaration(scalar.Value);
+                    return ParseFieldDeclaration(location, scalar.Value);
                 }
                 catch(Exception e)
                 {
@@ -208,7 +244,7 @@ namespace Distance.Engine.Builder
                 throw new NotImplementedException();
             }
 
-            private static Field ParseFieldDeclaration(string declaration)
+            private static Field ParseFieldDeclaration(Location location, string declaration)
             {
                 var identifier = @"[_a-zA-Z][_\.a-zA-Z0-9]*(\[\])?";
                 var pattern = $"(?<FieldType>{identifier})\\s+(?<FieldName>{identifier})";
@@ -217,13 +253,15 @@ namespace Distance.Engine.Builder
                 {
                     var type = match.Groups["FieldType"].Value;
                     var name = match.Groups["FieldName"].Value;
-                    return new Field { FieldName = name, FieldType = type };
+                    return new Field { FieldName = name, FieldType = type, Location = location };
                 }
                 else
                 {
-                    throw new ArgumentException($"Syntax error in field declaration '{declaration}'.");
+                    throw new YamlDotNet.Core.SyntaxErrorException(location.Start, location.End, $"Syntax error in field declaration '{declaration}'.");
                 }
             }
         }
     }
+
+
 }

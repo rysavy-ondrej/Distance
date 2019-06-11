@@ -9,4 +9,8 @@
     <ProjectReference Include="..\..\DistanceUtils\DistanceUtils.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="NBNS\" />
+  </ItemGroup>
+
 </Project>
