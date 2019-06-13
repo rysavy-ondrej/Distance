@@ -61,14 +61,14 @@ namespace Distance.Engine.Runner
 
             await LoadFactsAsync(pcapPath, session);
 
-            await FireRules(session);
+            await FireRulesAsync(session);
 
             Console.WriteLine($"├─ Diagnostic Log written to '{logPath}'.");
             Console.WriteLine($"├─ Diagnostic Events written to '{eventPath}'.");
             Console.WriteLine($"└ done [{sw.Elapsed}].");
         }
 
-        private async Task FireRules(ISession session)
+        private async Task FireRulesAsync(ISession session)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -78,7 +78,14 @@ namespace Distance.Engine.Runner
             var firedAccumulated = 0;
             var tmr = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
             var cts = new CancellationTokenSource();
-            tmr.Subscribe(x => { Console.WriteLine($"│├─ fired: {firedAccumulated} rules [{sw.Elapsed}]."); firedAccumulated = 0; }, cts.Token);
+
+            void PrintStatus(long x)
+            {
+                Console.WriteLine($"│├─ {sw.Elapsed}: fired {firedAccumulated}/{totalRulesFired} new/total rules.");
+                firedAccumulated = 0;
+            }
+
+            tmr.Subscribe(PrintStatus, cts.Token);
             while (true)
             {
                 var fired = session.Fire(1000);
@@ -93,9 +100,10 @@ namespace Distance.Engine.Runner
                     firedAccumulated += fired;
                 }
             }
-            Console.WriteLine($"│├─ fired: {firedAccumulated} rules.");
+            PrintStatus(0);
             Console.WriteLine($"│├ total rules fired: {totalRulesFired} at average rate: {(int)(totalRulesFired / sw.Elapsed.TotalSeconds)} rules/second.");
             Console.WriteLine($"│└ done [{sw.Elapsed}].");
+            await Task.CompletedTask;
         }
 
         private async Task<int> LoadFactsAsync(string pcapPath, ISession session)
