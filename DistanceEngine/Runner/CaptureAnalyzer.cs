@@ -102,17 +102,17 @@ namespace Distance.Engine.Runner
         {
             var sw = new Stopwatch();
             sw.Start();
-            Console.WriteLine("│┌ Loading facts:");
+            Console.WriteLine($"│┌ Loading facts from '{pcapPath}':");
             var facts = m_diagnosticProfileAssemblies.SelectMany(x => FactsLoaderFactory.FindDerivedTypes(x, typeof(DistanceFact))).ToList();
             var factsLoader = FactsLoaderFactory.Create<SharkFactsLoader>(facts, 
-                info => Console.WriteLine($"│├─ loading {info.FactType.Name} facts started."), 
-                info => Console.WriteLine($"│├─ loading {info.FactType.Name} facts finished."));
+                info => Console.WriteLine($"│├─ start loading {info.FactType.Name} facts."), 
+                (info, count) => Console.WriteLine($"│├─ stop loading {info.FactType.Name} facts ({count})."));
 
-            int count = 0;
-            await factsLoader.GetData(pcapPath).ForEachAsync(obj => { count += session.TryInsert(obj) ? 1 : 0; });
-            Console.WriteLine($"│├─ {count} facts loaded.");
+            int allFactsCount = 0;
+            await factsLoader.GetData(pcapPath).ForEachAsync(obj => { allFactsCount += session.TryInsert(obj) ? 1 : 0; });
+            Console.WriteLine($"│├ {allFactsCount} facts loaded.");
             Console.WriteLine($"│└ ok [{sw.Elapsed}].");
-            return count;
+            return allFactsCount;
         }
 
         private ISessionFactory CreateRepository(Logger logger)

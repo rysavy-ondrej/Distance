@@ -17,9 +17,9 @@ namespace Distance.Engine.Runner
         public static readonly Char Separator = '\t';
         private readonly FactsInformation[] m_factInfoCollection;
         private readonly Action<FactsInformation> m_onStarted;
-        private readonly Action<FactsInformation> m_onCompleted;
+        private readonly Action<FactsInformation, int> m_onCompleted;
 
-        public SharkFactsLoader(IEnumerable<FactsInformation> factInfoCollection, Action<FactsInformation> onStarted = null, Action<FactsInformation> onCompleted = null)
+        public SharkFactsLoader(IEnumerable<FactsInformation> factInfoCollection, Action<FactsInformation> onStarted = null, Action<FactsInformation, int> onCompleted = null)
         {
             m_factInfoCollection = factInfoCollection.ToArray();
             m_onStarted = onStarted;
@@ -38,7 +38,7 @@ namespace Distance.Engine.Runner
             {
                 var fieldString = String.Join(" -e ", info.Fields);
                 var arguments = $"-r {inputfile} -Y {info.Filter} -T fields -e {fieldString}";
-
+                var count = 0;
                 var process = new Process()
                 {
                     StartInfo = new ProcessStartInfo
@@ -57,11 +57,12 @@ namespace Distance.Engine.Runner
                     string line = await process.StandardOutput.ReadLineAsync();
                     if (line != null)
                     {
+                        count++;
                         observer.OnNext(line);
                     }
                     else
                     {
-                        m_onCompleted?.Invoke(info);
+                        m_onCompleted?.Invoke(info, count);
                         observer.OnCompleted();
                         break;
                     }

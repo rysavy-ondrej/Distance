@@ -8,7 +8,7 @@ namespace Distance.Engine.Runner
 {
     public class FactsLoaderFactory
     {
-        public static IFactsLoader Create<T>(List<Type> facts, Action<FactsInformation> onStarted = null, Action<FactsInformation> onCompleted = null)
+        public static IFactsLoader Create<T>(List<Type> facts, Action<FactsInformation> onStarted = null, Action<FactsInformation, int> onCompleted = null)
         {
             var factsInfoCollection = facts.Select(CreateInfoObject).Where(x => x != null).ToArray();
             if (typeof(T) == typeof(SharkFactsLoader)) return new SharkFactsLoader(factsInfoCollection, onStarted, onCompleted);
