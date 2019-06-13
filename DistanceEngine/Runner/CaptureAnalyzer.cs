@@ -51,11 +51,11 @@ namespace Distance.Engine.Runner
             sw.Start();
             Console.WriteLine("┌ Initializing repo...");
             var sessionFactory = CreateRepository(logger);
-            Console.WriteLine($"└ ok [{sw.Elapsed}].");
+            Console.WriteLine($"└ done [{sw.Elapsed}].");
             sw.Restart();
             Console.WriteLine("┌ Creating a session...");
             var session = sessionFactory.CreateSession();
-            Console.WriteLine($"└ ok [{sw.Elapsed}].");
+            Console.WriteLine($"└ done [{sw.Elapsed}].");
             sw.Restart();
             Console.WriteLine("┌ Processing...");
 
@@ -111,7 +111,7 @@ namespace Distance.Engine.Runner
             int allFactsCount = 0;
             await factsLoader.GetData(pcapPath).ForEachAsync(obj => { allFactsCount += session.TryInsert(obj) ? 1 : 0; });
             Console.WriteLine($"│├ {allFactsCount} facts loaded.");
-            Console.WriteLine($"│└ ok [{sw.Elapsed}].");
+            Console.WriteLine($"│└ done [{sw.Elapsed}].");
             return allFactsCount;
         }
 
@@ -128,12 +128,12 @@ namespace Distance.Engine.Runner
                 {
                     Console.WriteLine($"│├─ {rule.Name} (pri={rule.Priority})");
                 }
-                Console.WriteLine($"│└ ok [{sw.Elapsed}].");
+                Console.WriteLine($"│└ done [{sw.Elapsed}].");
             }
             sw.Restart();
             Console.WriteLine("│┌ Compiling rules...");
             var factory = repository.Compile();
-            Console.WriteLine($"│└ ok [{sw.Elapsed}].");
+            Console.WriteLine($"│└ done [{sw.Elapsed}].");
             return factory;
         }
     }
