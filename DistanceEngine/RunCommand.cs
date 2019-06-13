@@ -32,7 +32,7 @@ namespace Distance.Engine
             var inputFile = command.Argument("InputPcapFile",
                 "An input packet capture file to analyze.", false);
 
-            command.OnExecute(() =>
+            command.OnExecute(async () =>
             {
                 
                 if (!profileAssemblyOption.HasValue())
@@ -42,7 +42,8 @@ namespace Distance.Engine
                 var diagnosticProfileAssemblies = profileAssemblyOption.Values.Select(x=>Assembly.LoadFrom(GetAssemblyPath(x))).ToArray();
                 var analyzer = new CaptureAnalyzer(diagnosticProfileAssemblies);
                 if (parallelOption.HasValue()) analyzer.DegreeOfParallelism = Int32.Parse(parallelOption.Value());
-                return analyzer.AnalyzeCaptureFile(inputFile.Value);
+                await analyzer.AnalyzeCaptureFile(inputFile.Value);
+                return 0;
             });            
         }
 

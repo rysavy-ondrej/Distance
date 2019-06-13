@@ -16,6 +16,9 @@ namespace Distance.Runtime
         static Logger m_logger; 
         static Logger m_eventLogger;
 
+        public static Logger Logger { get => m_logger; set => m_logger = value; }
+        public static Logger EventLogger { get => m_eventLogger; set => m_eventLogger = value; }
+
         public static void ConfigureLog(string logfilePath, string eventfilePath, bool eventToConsole = false)
         {
             var config = new NLog.Config.LoggingConfiguration();

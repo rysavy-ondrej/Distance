@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -34,113 +35,106 @@ namespace Distance.Engine.Runner
             m_diagnosticProfileAssemblies = diagnosticProfileAssemblies;
         }
 
-        public int AnalyzeCaptureFile(string input)
+        public async Task AnalyzeCaptureFile(string input)
         {
             if (!File.Exists(input)) throw new ArgumentException($"File '{input}' does not exist.");
             var pcapPath = Path.GetFullPath(input);
             var logPath = Path.ChangeExtension(pcapPath, "log");
-            var eventPath = Path.ChangeExtension(pcapPath, "evt");
             if (File.Exists(logPath)) File.Delete(logPath);
+            var eventPath = Path.ChangeExtension(pcapPath, "evt");
+            if (File.Exists(eventPath)) File.Delete(eventPath);
 
             Context.ConfigureLog(logPath, eventPath);
             var logger = LogManager.GetLogger(Context.DistanceOutputLoggerName);
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Console.WriteLine("┌ Initializing repo...");
+            var sessionFactory = CreateRepository(logger);
+            Console.WriteLine($"└ ok [{sw.Elapsed}].");
+            sw.Restart();
+            Console.WriteLine("┌ Creating a session...");
+            var session = sessionFactory.CreateSession();
+            Console.WriteLine($"└ ok [{sw.Elapsed}].");
+            sw.Restart();
+            Console.WriteLine("┌ Processing...");
+
+            await LoadFactsAsync(pcapPath, session);
+
+            await FireRules(session);
+
+            Console.WriteLine($"├─ Diagnostic Log written to '{logPath}'.");
+            Console.WriteLine($"├─ Diagnostic Events written to '{eventPath}'.");
+            Console.WriteLine($"└ done [{sw.Elapsed}].");
+        }
+
+        private async Task FireRules(ISession session)
+        {
             var sw = new Stopwatch();
             sw.Start();
 
-            var factory = InitializeRepository(logger, sw);
-            Console.WriteLine($"ok [{sw.Elapsed}].");
-            sw.Restart();
-            Console.Write("Creating a session...");
-            var session = factory.CreateSession();
-            Console.WriteLine($"ok [{sw.Elapsed}].");
-            sw.Restart();
-
-            var facts = m_diagnosticProfileAssemblies.SelectMany(x=> FindDerivedTypes(x, typeof(DistanceFact))).ToList();
-
-            Console.WriteLine($"Loading facts, using {(m_degreeOfParallelism == -1 ? "all" : m_degreeOfParallelism.ToString())} thread(s):");
-            Parallel.ForEach(facts, new ParallelOptions() { MaxDegreeOfParallelism = m_degreeOfParallelism }, (factType) =>
-            {
-                ExtractTransformLoad(factType, pcapPath, session);
-            });
-
-            Console.WriteLine($"All facts loaded [{sw.Elapsed}].");
-            sw.Restart();
-            Console.Write("Waiting for completion...");
-            // start match/resolve/act cycle
+            Console.WriteLine("│┌ Firing rules:");
+            var totalRulesFired = 0;
+            var firedAccumulated = 0;
+            var tmr = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+            var cts = new CancellationTokenSource();
+            tmr.Subscribe(x => { Console.WriteLine($"│├─ fired: {firedAccumulated} rules [{sw.Elapsed}]."); firedAccumulated = 0; }, cts.Token);
             while (true)
             {
-                var fired = session.Fire(100);
+                var fired = session.Fire(1000);
+                totalRulesFired += fired;
                 if (fired == 0)
                 {
+                    cts.Cancel();
                     break;
                 }
                 else
                 {
-                    Console.Write(".");
+                    firedAccumulated += fired;
                 }
             }
-            Console.WriteLine($"done [{sw.Elapsed}].");
-            Console.WriteLine($"Diagnostic Log written to '{logPath}'.");
-            Console.WriteLine($"Diagnostic Events written to '{eventPath}'.");
-            return 0;
+            Console.WriteLine($"│├─ fired: {firedAccumulated} rules.");
+            Console.WriteLine($"│├ total rules fired: {totalRulesFired} at average rate: {(int)(totalRulesFired / sw.Elapsed.TotalSeconds)} rules/second.");
+            Console.WriteLine($"│└ done [{sw.Elapsed}].");
         }
 
-        private ISessionFactory InitializeRepository(Logger logger, Stopwatch sw)
+        private async Task<int> LoadFactsAsync(string pcapPath, ISession session)
         {
+            var sw = new Stopwatch();
+            sw.Start();
+            Console.WriteLine("│┌ Loading facts:");
+            var facts = m_diagnosticProfileAssemblies.SelectMany(x => FactsLoaderFactory.FindDerivedTypes(x, typeof(DistanceFact))).ToList();
+            var factsLoader = FactsLoaderFactory.Create<SharkFactsLoader>(facts, 
+                info => Console.WriteLine($"│├─ loading {info.FactType.Name} facts started."), 
+                info => Console.WriteLine($"│├─ loading {info.FactType.Name} facts finished."));
+
+            int count = 0;
+            await factsLoader.GetData(pcapPath).ForEachAsync(obj => { count += session.TryInsert(obj) ? 1 : 0; });
+            Console.WriteLine($"│├─ {count} facts loaded.");
+            Console.WriteLine($"│└ ok [{sw.Elapsed}].");
+            return count;
+        }
+
+        private ISessionFactory CreateRepository(Logger logger)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
             var repository = new RuleRepository();
             foreach (var assembly in m_diagnosticProfileAssemblies)
             {
-                Console.Write($"Loading rules from assembly '{assembly.FullName}', Location='{assembly.Location}'...");
+                Console.WriteLine($"│┌ Loading rules from assembly '{assembly.Location}':");
                 repository.Load(x => x.From(Assembly.GetExecutingAssembly(), assembly));
-                Console.WriteLine($"ok [{sw.Elapsed}].");
-
                 foreach (var rule in repository.GetRules())
                 {
-                    logger.Info($"Rule: name={rule.Name}, priority = {rule.Priority}");
+                    Console.WriteLine($"│├─ {rule.Name} (pri={rule.Priority})");
                 }
+                Console.WriteLine($"│└ ok [{sw.Elapsed}].");
             }
             sw.Restart();
-            Console.Write("Compiling rules...");
+            Console.WriteLine("│┌ Compiling rules...");
             var factory = repository.Compile();
+            Console.WriteLine($"│└ ok [{sw.Elapsed}].");
             return factory;
-        }
-        private Type GetFactoryType(Type factType)
-        {
-            var asm = Assembly.GetAssembly(factType);
-            var genericType = typeof(DistanceFactFactory<object>).GetGenericTypeDefinition();
-            var factoryType = genericType.MakeGenericType(factType);
-            return FindDerivedTypes(asm, factoryType).FirstOrDefault() ?? factoryType;
-        }
-
-        private DistanceFactFactoryBase GetFactoryObject(Type factType)
-        {
-            var factoryType = GetFactoryType(factType);
-            var constructor = factoryType.GetConstructor(new Type[0]);
-            var instance = constructor.Invoke(new object[0]);
-            return (DistanceFactFactoryBase)instance;
-        }
-
-        private void ExtractTransformLoad(Type factType, string pcapPath, ISession session)
-        {
-
-            var filter = (string)factType.GetField("Filter").GetValue(null);
-            var fields = (string[])factType.GetField("Fields").GetValue(null);
-            var factory = GetFactoryObject(factType);
-
-            var sw = new Stopwatch();
-            sw.Start();
-            Console.WriteLine($"  Loading packets from '{pcapPath}', filter='{filter}'...");
-            var factObjects = FactsLoader.Load(pcapPath, filter, fields, factory.Create).ToList();
-            Console.WriteLine($"  ok [{sw.Elapsed}].");
-            sw.Restart();
-            Console.WriteLine($"  Inserting '{factType.Name}' facts ({factObjects.Count}) to the session.");
-            session.InsertAll(factObjects);
-            Console.WriteLine($"  ok [{sw.Elapsed}].");
-            sw.Stop();
-        }
-        public IEnumerable<Type> FindDerivedTypes(Assembly assembly, Type baseType)
-        {
-            return assembly.GetTypes().Where(t => baseType.IsAssignableFrom(t));
         }
     }
 }

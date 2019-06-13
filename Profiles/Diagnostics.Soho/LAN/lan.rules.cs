@@ -100,7 +100,7 @@
             if (localAddresses == null || localAddresses.Count() == 0) return;
             // compute wildcard:
             var wc = localAddresses.Select(s => (Address:IPAddress.Parse(s),Prefix:32)).Aggregate((x,y) => IPAddressUtils.CommonPrefix(x.Address, x.Prefix,y.Address, y.Prefix));
-            Console.WriteLine($"Local prefix: {wc.Address}/{wc.Prefix}");
+            ctx.Info($"Local prefix: {wc.Address}/{wc.Prefix}");
             ctx.TryInsert(new LocalNetworkPrefix { IpNetwork = wc.Address.ToString(), IpPrefix = wc.Prefix });
         }
     }
@@ -123,7 +123,7 @@
                     select g
                 );
             Then()
-                .Do(ctx => Console.WriteLine($"{group.Key} hosts: {StringUtils.ToString(group.ToArray())}"));
+                .Do(ctx => ctx.Info($"{group.Key} hosts: {StringUtils.ToString(group.ToArray())}"));
         }
         string LocalOrRemote(LocalNetworkPrefix localNetworkPrefix, AddressMapping m)
         {
