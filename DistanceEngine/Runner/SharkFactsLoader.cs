@@ -6,12 +6,15 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Distance.Engine.Runner
 {
 
+    /// <summary>
+    /// Implements facts loader that uses TShark for reading a pcap file and dissecting packets. 
+    /// </summary>
+    [FactsLoader("Shark")]
     class SharkFactsLoader : IFactsLoader
     {
         public static readonly Char Separator = '\t';
@@ -72,19 +75,5 @@ namespace Distance.Engine.Runner
             }));
         }
 
-    }
-
-    static class Extensions
-    {
-        public static Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var tcs = new TaskCompletionSource<object>();
-            process.EnableRaisingEvents = true;
-            process.Exited += (sender, args) => tcs.TrySetResult(null);
-            if (cancellationToken != default)
-                cancellationToken.Register(tcs.SetCanceled);
-
-            return tcs.Task;
-        }
     }
 }

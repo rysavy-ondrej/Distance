@@ -29,8 +29,8 @@ namespace Distance.Engine
             command.HelpOption("--|-help");
             var profileAssemblyOption = command.Option("-profile <PROFILENAME>", "Specifies assembly that contains a diagnostic profile.", CommandOptionType.MultipleValue);
             var parallelOption = command.Option("-parallel <NUMBER>", "Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).", CommandOptionType.SingleValue);
-            var inputFile = command.Argument("InputPcapFile",
-                "An input packet capture file to analyze.", false);
+            var decoderClassOption = command.Option("-decoder <STRING>", "Sets the decoder to use for dissecting packets and load facts. Default is 'Shark'.", CommandOptionType.SingleValue);
+            var inputFile = command.Argument("InputPcapFile", "An input packet capture file to analyze.", false);
 
             command.OnExecute(async () =>
             {
