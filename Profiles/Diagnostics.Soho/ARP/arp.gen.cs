@@ -217,6 +217,35 @@ namespace Distance.Diagnostics.Arp {
         }
     }
     
+    public class ArpUnanswered : Distance.Runtime.DistanceDerived {
+        
+        private ArpPacket _Request;
+        
+        [FieldName("request")]
+        public virtual ArpPacket Request {
+            get {
+                return this._Request;
+            }
+            set {
+                this._Request = value;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("ArpUnanswered: request={0}", this.Request);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.Request);
+        }
+        
+        public override bool Equals(object obj) {
+            ArpUnanswered that = obj as ArpUnanswered;
+            return ((that != null) 
+                        && object.Equals(this.Request, that.Request));
+        }
+    }
+    
     public class ArpAddressMapping : Distance.Runtime.DistanceDerived {
         
         private String _IpAddr;

@@ -37,4 +37,19 @@ namespace Distance.Diagnostics.Arp
                 .Do(ctx => ctx.TryInsert(new ArpAddressMapping {EthAddr = reply.ArpSrcHw, IpAddr = reply.ArpSrcProtoIpv4 }));
         }
     }
+
+    public class ArpNoReplyRule : DistanceRule
+    {
+        public override void Define()
+        {
+            ArpPacket request = null;
+            When()
+                .Match<ArpPacket>(() => request, x => x.ArpOpcode == (int)ArpOpcode.Request)
+                .Not<ArpPacket>(x => x.ArpOpcode == (int)ArpOpcode.Reply, x => x.EthDst == request.EthSrc, x => x.FrameTimeRelative - request.FrameTimeRelative < 1);
+
+            Then()
+                .Do(ctx => ctx.Error($"No reply found for ARP request: {request}."))
+                .Yield(_ => new ArpUnanswered { Request = request });
+        }
+    }
 }

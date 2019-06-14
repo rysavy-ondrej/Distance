@@ -142,6 +142,64 @@ namespace Distance.Diagnostics.Lan {
         }
     }
     
+    public class IpSourceEndpoint : Distance.Runtime.DistanceDerived {
+        
+        private String _IpAddr;
+        
+        [FieldName("ip.addr")]
+        public virtual String IpAddr {
+            get {
+                return this._IpAddr;
+            }
+            set {
+                this._IpAddr = value;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("IpSourceEndpoint: ip.addr={0}", this.IpAddr);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddr);
+        }
+        
+        public override bool Equals(object obj) {
+            IpSourceEndpoint that = obj as IpSourceEndpoint;
+            return ((that != null) 
+                        && object.Equals(this.IpAddr, that.IpAddr));
+        }
+    }
+    
+    public class IpDestinationEndpoint : Distance.Runtime.DistanceDerived {
+        
+        private String _IpAddr;
+        
+        [FieldName("ip.addr")]
+        public virtual String IpAddr {
+            get {
+                return this._IpAddr;
+            }
+            set {
+                this._IpAddr = value;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("IpDestinationEndpoint: ip.addr={0}", this.IpAddr);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddr);
+        }
+        
+        public override bool Equals(object obj) {
+            IpDestinationEndpoint that = obj as IpDestinationEndpoint;
+            return ((that != null) 
+                        && object.Equals(this.IpAddr, that.IpAddr));
+        }
+    }
+    
     public class EthEndpoint : Distance.Runtime.DistanceDerived {
         
         private String _EthAddr;
@@ -354,6 +412,67 @@ namespace Distance.Diagnostics.Lan {
             return (((that != null) 
                         && object.Equals(this.IpAddress, that.IpAddress)) 
                         && object.Equals(this.EthAddresses, that.EthAddresses));
+        }
+    }
+    
+    public class IpAddressMismatch : Distance.Runtime.DistanceEvent {
+        
+        private String _IpAddress;
+        
+        private String _EthAddress;
+        
+        [FieldName("ip.address")]
+        public virtual String IpAddress {
+            get {
+                return this._IpAddress;
+            }
+            set {
+                this._IpAddress = value;
+            }
+        }
+        
+        [FieldName("eth.address")]
+        public virtual String EthAddress {
+            get {
+                return this._EthAddress;
+            }
+            set {
+                this._EthAddress = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "IpAddressMismatch";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("The IP address {0} of a local host {1} is not within the scope of the local netwo" +
+                        "rk.", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.EthAddress));
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("IpAddressMismatch: ip.address={0} eth.address={1}", this.IpAddress, this.EthAddress);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddress, this.EthAddress);
+        }
+        
+        public override bool Equals(object obj) {
+            IpAddressMismatch that = obj as IpAddressMismatch;
+            return (((that != null) 
+                        && object.Equals(this.IpAddress, that.IpAddress)) 
+                        && object.Equals(this.EthAddress, that.EthAddress));
         }
     }
     

@@ -8,23 +8,45 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Net;
 
-    public class CollectIpEndpointsRule : DistanceRule
+
+    public class IpSourceEndpointRule : DistanceRule
     {
         public override void Define()
         {
             IpPacket packet = null;
 
             When()
-                .Match(() => packet); 
+                .Match(() => packet);
             Then()
-                .Do(ctx => ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpSrc }))
-                .Do(ctx => ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpDst }));
-
+                .Do(ctx => InsertFacts(ctx, packet));
+        }
+        private void InsertFacts(IContext ctx, IpPacket packet)
+        {
+            ctx.TryInsert(new IpSourceEndpoint { IpAddr = packet.IpSrc });
+            ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpSrc });
         }
     }
+    public class IpDestinationEndpointRule : DistanceRule
+    {
+        public override void Define()
+        {
+            IpPacket packet = null;
+
+            When()
+                .Match(() => packet);
+            Then()
+                .Do(ctx => InsertFacts(ctx, packet));
+        }
+
+        private void InsertFacts(IContext ctx, IpPacket packet)
+        {
+            ctx.TryInsert(new IpDestinationEndpoint { IpAddr = packet.IpDst });
+            ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpDst });
+        }
+    }
+
     public class AddressMappingRule : DistanceRule
     {
         public override void Define()
@@ -35,21 +57,6 @@
                 .Match(() => packet); 
             Then()
                 .Do(ctx => ctx.TryInsert(new AddressMapping { IpAddr = packet.IpSrc, EthAddr = packet.EthSrc }));
-        }
-    }
-    public class DuplicateAddressRule : DistanceRule
-    {
-        public override void Define()
-        {
-            IGrouping<string, AddressMapping> group = null;
-            When()
-                .Query(() => group, q =>
-                    from m in q.Match<AddressMapping>()
-                    group m by m.IpAddr into g
-                    where g.Count() > 1
-                    select g);
-            Then()
-                 .Yield(_ => new IpAddressConflict { IpAddress = group.Key, EthAddresses = group.Select(x=>x.EthAddr).ToArray() });
         }
     }
 
@@ -65,15 +72,22 @@
         public override void Define()
         {
             IGrouping<string,AddressMapping> group = null;
-
+            ArpAddressMapping arpMapping = null;
             When()
                 .Query(() => group, q =>
                     from m in q.Match<AddressMapping>()
                     group m by m.EthAddr into g
                     where g.Count() > 1
-                    select g);
+                    select g)
+                .Match<ArpAddressMapping>(() => arpMapping, m => m.EthAddr == group.Key);
             Then()
-                 .Yield(_ => new GatewayCandidate { EthAddr = group.Key });
+                 .Do(ctx => EmitAndInfo(ctx, new GatewayCandidate { IpAddr = arpMapping.IpAddr, EthAddr = group.Key }));
+        }
+
+        private void EmitAndInfo(IContext ctx, GatewayCandidate gw)
+        {
+            ctx.Info($"gateway: ip.addr={gw.IpAddr} eth.addr={gw.EthAddr}");
+            ctx.TryInsert(gw);
         }
     }
 
@@ -130,5 +144,48 @@
             return IPAddress.Parse(m.IpAddr).BelongsTo(IPAddress.Parse(localNetworkPrefix.IpNetwork), localNetworkPrefix.IpPrefix) ? "local" : "remote";
         }
 
+    }
+
+
+
+
+    public class DuplicateAddressRule : DistanceRule
+    {
+        public override void Define()
+        {
+            IGrouping<string, AddressMapping> group = null;
+            When()
+                .Query(() => group, q =>
+                    from m in q.Match<AddressMapping>()
+                    group m by m.IpAddr into g
+                    where g.Count() > 1
+                    select g);
+            Then()
+                 .Yield(_ => new IpAddressConflict { IpAddress = group.Key, EthAddresses = group.Select(x => x.EthAddr).ToArray() });
+        }
+    }
+
+    //  
+    /// <summary>
+    /// A local host has an address that is not from LAN address scope. 
+    /// </summary>
+    /// <remarks>
+    /// IP address outside the LAN - it behaves like local address but it is not:
+    /// 
+    /// </remarks>
+    public class IpAddressMismatchRule : DistanceRule
+    {
+        public override void Define()
+        {
+            IpSourceEndpoint ipSrc = null;
+            AddressMapping mapping = null;
+            When()
+                .Match(() => ipSrc)
+                .Match(() => mapping, m => m.IpAddr == ipSrc.IpAddr)
+                .Exists<ArpUnanswered>(x => x.Request.EthSrc == mapping.EthAddr)
+                .Not<IpDestinationEndpoint>(d => ipSrc.IpAddr == d.IpAddr);
+            Then()
+                .Yield(_ => new IpAddressMismatch { IpAddress = ipSrc.IpAddr, EthAddress = mapping.EthAddr});
+        }
     }
 }

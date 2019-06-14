@@ -20,6 +20,10 @@ derived:
       - ArpPacket request
       - ArpPacket reply
 
+  - name: ArpUnanswered
+    fields:
+      - ArpPacket request
+
   - name: ArpAddressMapping
     description: Carries information on mapping between ip and mac addresses observed from ARP communication.
     fields:       

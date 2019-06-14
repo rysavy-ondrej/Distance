@@ -17,6 +17,16 @@ derived:
     fields:       
         - string ip.addr    
 
+  - name: IpSourceEndpoint
+    description: Carries information about a single Internet source end-point.
+    fields:       
+        - string ip.addr 
+
+  - name: IpDestinationEndpoint
+    description: Carries information about a single Internet destination end-point.
+    fields:       
+        - string ip.addr 
+
   - name: EthEndpoint
     description: Carries information about a single local end-point.
     fields:       
@@ -28,13 +38,12 @@ derived:
       - string ip.addr
       - string eth.addr
 
-derived:
   - name: AddressMapping
     description: Carries information on mapping between ip and mac addresses
     fields:       
       - string ip.addr
       - string eth.addr
-derived:
+
   - name: LocalNetworkPrefix
     fields: 
       - string ip.network
@@ -48,6 +57,15 @@ events:
     fields:
       - string    ip.address
       - string[]  eth.addresses
+
+  - name: IpAddressMismatch
+    severity:     error
+    description:  "Host's IP address mismatch detected. The IP address of a local host is not within the scope of the local network."
+    message:      "The IP address {ip.address} of a local host {eth.address} is not within the scope of the local network."
+    fields:
+      - string    ip.address
+      - string    eth.address
+
 
   - name: MultipleDefaultGateways 
     severity:    warning 
