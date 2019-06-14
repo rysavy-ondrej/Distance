@@ -26,6 +26,7 @@
         {
             ctx.TryInsert(new IpSourceEndpoint { IpAddr = packet.IpSrc });
             ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpSrc });
+            ctx.TryInsert(new AddressMapping { IpAddr = packet.IpSrc, EthAddr = packet.EthSrc });
         }
     }
     public class IpDestinationEndpointRule : DistanceRule
@@ -44,19 +45,7 @@
         {
             ctx.TryInsert(new IpDestinationEndpoint { IpAddr = packet.IpDst });
             ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpDst });
-        }
-    }
-
-    public class AddressMappingRule : DistanceRule
-    {
-        public override void Define()
-        {
-            IpPacket packet = null;
-
-            When()
-                .Match(() => packet); 
-            Then()
-                .Do(ctx => ctx.TryInsert(new AddressMapping { IpAddr = packet.IpSrc, EthAddr = packet.EthSrc }));
+            ctx.TryInsert(new AddressMapping { IpAddr = packet.IpDst, EthAddr = packet.EthDst });
         }
     }
 
@@ -186,6 +175,24 @@
                 .Not<IpDestinationEndpoint>(d => ipSrc.IpAddr == d.IpAddr);
             Then()
                 .Yield(_ => new IpAddressMismatch { IpAddress = ipSrc.IpAddr, EthAddress = mapping.EthAddr});
+        }
+    }
+
+    /// <summary>
+    /// The use of link local IPv4 address is detected by this rule.
+    /// </summary>
+    public class LinkLocalAddressUseRule : DistanceRule
+    {
+        IPAddress linkLocal = IPAddress.Parse("169.254.0.0");
+        public override void Define()
+        {
+            IpSourceEndpoint ipSrc = null;
+            AddressMapping mapping = null;
+            When()
+                .Match(() => ipSrc, x => IPAddress.Parse(x.IpAddr).BelongsTo(linkLocal, 16))
+                .Match(() => mapping, m => m.IpAddr == ipSrc.IpAddr);
+            Then()
+                 .Yield(_ => new LinkLocalIpAddressUse { IpAddress = ipSrc.IpAddr, EthAddress = mapping.EthAddr });
         }
     }
 }

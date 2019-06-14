@@ -16,11 +16,13 @@ facts:
 
 derived:
   - name: ArpRequestReply
+    description: Represents a corresponding pair of request and reply ARP packets.
     fields: 
       - ArpPacket request
       - ArpPacket reply
 
   - name: ArpUnanswered
+    description: Represents a request packet without the corresponding reply packet. 
     fields:
       - ArpPacket request
 

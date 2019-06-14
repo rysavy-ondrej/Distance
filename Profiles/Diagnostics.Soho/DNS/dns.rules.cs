@@ -6,8 +6,7 @@ using System.Collections.Generic;
 namespace Distance.Diagnostics.Dns
 {
 
-    [Name("Dns.CollectServers"), Description("The rule collects information about available DNS servers.")]
-    public class CollectDnsServerRule : DistanceRule
+    public class DnsServerRule : DistanceRule
     {
         public override void Define()
         {
@@ -19,7 +18,6 @@ namespace Distance.Diagnostics.Dns
         }
     }
 
-    [Name("Dns.RequestResponse"), Description("The rule identifies pairs of request and response messages.")]
     public class DnsRequestResponseRule : DistanceRule
     {
         public override void Define()
@@ -51,9 +49,7 @@ namespace Distance.Diagnostics.Dns
         NOTZONE = 9   // Name not in zone
     }
     
-    
-
-    [Name("Dns.ResponseError"), Description("The rule is fired for all DNS responses with error code != 0.")]
+   
     public class DnsResponseErrorRule : DistanceRule
     {
         static IDictionary<DnsResponseCode, string> ResponseCodeDescription = new Dictionary<DnsResponseCode, string>
@@ -82,9 +78,7 @@ namespace Distance.Diagnostics.Dns
         }
     }
 
-
-    [Name("Dns.NoResponse"), Description("The rule finds DNS requests without responses.")]
-    public class NoResponseRule : DistanceRule
+    public class DnsNoResponseRule : DistanceRule
     {
         public override void Define()
         {
@@ -99,8 +93,7 @@ namespace Distance.Diagnostics.Dns
         }
     }
 
-    [Name("Dns.DelayedResponse"), Description("The rule finds DNS replies that have latency greater than 1s.")]
-    public class DelayedResponseRule : DistanceRule
+    public class DnsDelayedResponseRule : DistanceRule
     {
         public override void Define()
         {
@@ -114,10 +107,9 @@ namespace Distance.Diagnostics.Dns
     }
 
     /// <summary>
-    /// 
+    /// Server does not response to any query.
     /// </summary>
-    [Name("Dns.ServerUnresponsive"), Description("Server does not response to any query from the local network.")]
-    public class ServerUnresponsive : DistanceRule
+    public class DnsServerUnresponsive : DistanceRule
     {
         public override void Define()
         {
@@ -130,10 +122,11 @@ namespace Distance.Diagnostics.Dns
         }
     }
 
-    [Name("Dns.ServerUnreliable"), Description("Server response only to some of queries.")]
-    public class ServerUnreliable : DistanceRule
+    /// <summary>
+    /// Server responses to some queries but not to all.
+    /// </summary>
+    public class DnsServerUnreliable : DistanceRule
     {
-
         public override void Define()
         {
             DnsServer server = null;
@@ -145,6 +138,5 @@ namespace Distance.Diagnostics.Dns
                 .Do(ctx => ctx.TryInsert(new DnsServerUnreliableEvent { Server = server }));
         }
     }
-
 }
  

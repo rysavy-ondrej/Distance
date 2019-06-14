@@ -66,6 +66,13 @@ events:
       - string    ip.address
       - string    eth.address
 
+  - name: LinkLocalIpAddressUse
+    severity:     error
+    description:  "Host uses link local IP address that can indicate an invalid or missing IP configuration."
+    message:      "Host {eth.address} uses link local IP address {ip.address}."
+    fields:
+      - string    ip.address
+      - string    eth.address
 
   - name: MultipleDefaultGateways 
     severity:    warning 

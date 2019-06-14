@@ -476,6 +476,66 @@ namespace Distance.Diagnostics.Lan {
         }
     }
     
+    public class LinkLocalIpAddressUse : Distance.Runtime.DistanceEvent {
+        
+        private String _IpAddress;
+        
+        private String _EthAddress;
+        
+        [FieldName("ip.address")]
+        public virtual String IpAddress {
+            get {
+                return this._IpAddress;
+            }
+            set {
+                this._IpAddress = value;
+            }
+        }
+        
+        [FieldName("eth.address")]
+        public virtual String EthAddress {
+            get {
+                return this._EthAddress;
+            }
+            set {
+                this._EthAddress = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "LinkLocalIpAddressUse";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("Host {0} uses link local IP address {1}.", Distance.Utils.StringUtils.ToString(this.EthAddress), Distance.Utils.StringUtils.ToString(this.IpAddress));
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("LinkLocalIpAddressUse: ip.address={0} eth.address={1}", this.IpAddress, this.EthAddress);
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddress, this.EthAddress);
+        }
+        
+        public override bool Equals(object obj) {
+            LinkLocalIpAddressUse that = obj as LinkLocalIpAddressUse;
+            return (((that != null) 
+                        && object.Equals(this.IpAddress, that.IpAddress)) 
+                        && object.Equals(this.EthAddress, that.EthAddress));
+        }
+    }
+    
     public class MultipleDefaultGateways : Distance.Runtime.DistanceEvent {
         
         private String[] _Gateways;
