@@ -79,7 +79,7 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Description | The host has correct IP address but the mask is incorrect. This may cause that some remote hosts are unreachable.  |
 | Example     |    |
 | Event       |    |
-| Pcap        | invallid_mask.pcap   |
+| Pcap        | invalid_mask.pcap   |
 | Reference   |    |
 
 | Id          | lan.5   |
@@ -91,8 +91,6 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Pcap        | invalid_gateway_address.pcap   |
 | Reference   |    |
 
-
-* The host has an incorrect gateway's IP address. 
 
 ### ARP Relate errors
 
