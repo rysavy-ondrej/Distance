@@ -11,6 +11,30 @@
     using System.Net;
 
 
+    public enum AddressScope { LinkLocalAddress, LocalAddress, RemoteAddress, MulticastAddress }
+    public static class LanRulesHelper
+    {
+        static IPAddress linkLocalIp = IPAddress.Parse("169.254.0.0");
+        static IPAddress multicastIp = IPAddress.Parse("224.0.0.0");
+
+        public static AddressScope GetAddressScope(string ipAddr, LocalNetworkPrefix localNetworkPrefix)
+        {
+            var ip = IPAddress.Parse(ipAddr);
+            if (ip.BelongsTo(linkLocalIp, 16)) return AddressScope.LinkLocalAddress;
+            if (ip.BelongsTo(multicastIp, 3)) return AddressScope.MulticastAddress;
+            if (ip.BelongsTo(IPAddress.Parse(localNetworkPrefix.IpNetwork), localNetworkPrefix.IpPrefix)) return AddressScope.LocalAddress;
+            else return AddressScope.RemoteAddress;
+        }
+
+        public static bool IsLinkLocal(string ipAddr)
+        {
+            var ip = IPAddress.Parse(ipAddr);
+            return (ip.BelongsTo(linkLocalIp, 16));
+        }
+    }
+    /// <summary>
+    /// The rule matches all ip packets and extracts several facts used by the other rules.
+    /// </summary>
     public class IpPacketRule : DistanceRule
     {
         public override void Define()
@@ -74,8 +98,12 @@
     }
 
     /// <summary>
-    /// Based on analysis of ARP communication we deduce LAN prefix.
+    /// Based on analysis of ARP communication, the LAN prefix is inferred.
     /// </summary>
+    /// <remarks>
+    /// LAN prefic is computed as the longes prefix which includes all addresses considered 
+    /// to be local addresses.
+    /// </remarks>
     public class LocalPrefixRule : DistanceRule
     {
         public override void Define()
@@ -109,32 +137,29 @@
     }
 
     /// <summary>
-    /// Remote addresses are addresses observed in IP packets but not resolved locally.
+    /// Classify the address as remote, local or multicast.
     /// </summary>
-    public class RemoteAddressesRule : DistanceRule
+    public class GroupAddressesByScopeRule : DistanceRule
     {
         public override void Define()
         {
             LocalNetworkPrefix localNetworkPrefix = null;
-            IGrouping<string, AddressMapping> group = null;
+            IGrouping<AddressScope, AddressMapping> addressClass = null;
 
             When()
                 .Match(() => localNetworkPrefix)
-                .Query(() => group, q =>
-                    from m in q.Match<AddressMapping>()
-                    group m by LocalOrRemote(localNetworkPrefix, m) into g
-                    select g
-                );
+                .Query(() => addressClass, q => q
+                    .Match<AddressMapping>()
+                    .GroupBy(m =>  LanRulesHelper.GetAddressScope(m.IpAddr, localNetworkPrefix)));
             Then()
-                .Do(ctx => ctx.Info($"{group.Key} hosts: {StringUtils.ToString(group.ToArray())}"));
+                .Do(ctx => ctx.Info($"{addressClass.Key} hosts: {StringUtils.ToString(addressClass.ToArray())}"));
         }
-        string LocalOrRemote(LocalNetworkPrefix localNetworkPrefix, AddressMapping m)
-        {
-            return IPAddress.Parse(m.IpAddr).BelongsTo(IPAddress.Parse(localNetworkPrefix.IpNetwork), localNetworkPrefix.IpPrefix) ? "local" : "remote";
-        }
-
     }
 
+    /// <summary>
+    /// Detects duplicate ip address by checking all address mappings.
+    /// Single IP address should be mapped to a single hardware address only.
+    /// </summary>
     public class DuplicateAddressRule : DistanceRule
     {
         public override void Define()
@@ -142,10 +167,9 @@
             IGrouping<string, AddressMapping> group = null;
             When()
                 .Query(() => group, q =>
-                    from m in q.Match<AddressMapping>()
-                    group m by m.IpAddr into g
-                    where g.Count() > 1
-                    select g);
+                    q.Match<AddressMapping>()
+                    .GroupBy(m => m.IpAddr)
+                    .Where(g => g.Count() > 1));
             Then()
                  .Yield(_ => new IpAddressConflict { IpAddress = group.Key, EthAddresses = group.Select(x => x.EthAddr).ToArray() });
         }
@@ -155,10 +179,6 @@
     /// <summary>
     /// A local host has an address that is not from LAN address scope. 
     /// </summary>
-    /// <remarks>
-    /// IP address outside the LAN - it behaves like local address but it is not:
-    /// 
-    /// </remarks>
     public class IpAddressMismatchRule : DistanceRule
     {
         public override void Define()
@@ -180,13 +200,13 @@
     /// </summary>
     public class LinkLocalAddressUseRule : DistanceRule
     {
-        IPAddress linkLocal = IPAddress.Parse("169.254.0.0");
+        
         public override void Define()
         {
             IpSourceEndpoint ipSrc = null;
             AddressMapping mapping = null;
             When()
-                .Match(() => ipSrc, x => IPAddress.Parse(x.IpAddr).BelongsTo(linkLocal, 16))
+                .Match(() => ipSrc, x => LanRulesHelper.IsLinkLocal(x.IpAddr))
                 .Match(() => mapping, m => m.IpAddr == ipSrc.IpAddr);
             Then()
                  .Yield(_ => new LinkLocalIpAddressUse { IpAddress = ipSrc.IpAddr, EthAddress = mapping.EthAddr });
@@ -194,7 +214,7 @@
     }
 
     /// <summary>
-    /// Can be detected by checking LAN broadcasts. It is ok, if there is only one LAN broadcasts.
+    /// Can be detected by checking LAN broadcasts. It is ok, if there is only one LAN broadcast.
     /// </summary>
     public class InvalidNetworkMaskRule : DistanceRule
     {
@@ -218,6 +238,9 @@
         }
     }
 
+    /// <summary>
+    /// Collects all ip addresses of hosts that send to the same broadcast address.
+    /// </summary>
     public class CollectBroadcastersRule : DistanceRule
     { 
         public override void Define()
@@ -227,9 +250,9 @@
             When()
                 .Match(() => bcast)
                 .Query(() => flows, q =>
-                    (from f in q.Match<IpFlow>()
-                    where f.IpDst == bcast.IpBroadcast 
-                    select f).Collect());
+                    q.Match<IpFlow>()
+                    .Where(f => f.IpDst == bcast.IpBroadcast) 
+                    .Collect());
             Then()
                 .Do(ctx => CheckNetworkMask(ctx, bcast, flows.ToArray()));
         }
@@ -245,9 +268,13 @@
         }
     }
 
+    /// <summary>
+    /// Invalid gateway is detected if some node has only local network communication and 
+    /// ARP to translate address of potential gateway failed. 
+    /// </summary>
     public class InvalidGatewayAddressRule : DistanceRule
     {
-        IPAddress multicastIp = IPAddress.Parse("224.0.0.0");
+        
         public override void Define()
         {
             LocalNetworkPrefix localPrefix = null;
@@ -255,18 +282,16 @@
             When()
                 .Match(() => localPrefix)
                 .Match(() => hostArp)
-                .All<IpFlow>(f => f.IpSrc == hostArp.Request.ArpSrcProtoIpv4 && IsLocalOrMulticast(f.IpDst, localPrefix));
+                .All<IpFlow>(f => f.IpSrc != hostArp.Request.ArpSrcProtoIpv4 || IsLocalOrMulticast(f.IpDst, localPrefix));
             Then()
-                .Do(ctx => CheckGw(ctx, hostArp));
+                .Do(ctx => EmitInvalidGateway(ctx, hostArp));
         }
         bool IsLocalOrMulticast(string ipAddr, LocalNetworkPrefix localNetworkPrefix)
         {
-            var ip = IPAddress.Parse(ipAddr);
-            var isLocal =  ip.BelongsTo(IPAddress.Parse(localNetworkPrefix.IpNetwork), localNetworkPrefix.IpPrefix);
-            var isMulticast = ip.BelongsTo(multicastIp, 3);
-            return isLocal || isMulticast;
+            var scope = LanRulesHelper.GetAddressScope(ipAddr, localNetworkPrefix);
+            return scope != AddressScope.RemoteAddress;
         }
-        private void CheckGw(IContext ctx, ArpUnanswered badGwArp)
+        private void EmitInvalidGateway(IContext ctx, ArpUnanswered badGwArp)
         {
             ctx.TryInsert(new InvalidGateway { HostIpAddr = badGwArp.Request.ArpSrcProtoIpv4, GwIpAddr = badGwArp.Request.ArpDstProtoIpv4 });    
         }
