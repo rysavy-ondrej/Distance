@@ -77,8 +77,9 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | ----------- | -- |
 | Name        | Invalid Network Mask   |
 | Description | The host has correct IP address but the mask is incorrect. This may cause that some remote hosts are unreachable.  |
-| Example     |    |
-| Event       |    |
+| Example     | The network has address 192.168.114.0/24. One of the host has however configured 192.168.0.0/16.   |
+| Evidence    | Some services uses network broadcast to query or announce to all local nodes, e.g., BROWSER or NBNS. The broadcast message  is identified as using broadcast destination mac address (ff:ff:ff:ff:ff:ff). The destination IP address is LAN broadcast and thus we may use this information to identify whether there are two or more different IP broadcasts addresses in use.  In the considered example, we have 'ff:ff:ff:ff:ff:ff, 192.168.114.255' and  'ff:ff:ff:ff:ff:ff, 192.168.255.255'. |
+| Event       | MultipleBroadcastAddresses(BroadcastGroup[] broadcasts)   |
 | Pcap        | invalid_mask.pcap   |
 | Reference   |    |
 
@@ -87,6 +88,9 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Name        | Invalid gateway address   |
 | Description | The host has configured invalid or unreachable local gateway. The provided IP address for the gateway is not correct. |
 | Example     | The correct gateway address is 192.168.99.1 but the host uses 192.168.99.254.   |
+| Evidence    | There are different possible options. i) The gateway is set to IP address not existing in the LAN. ii) The gateway is set to IP of a host, which is not a proper gateway in the LAN. 
+Ad i) To detect this situation it is sufficient to check that there are unresolved ARP requests of the host and the host is not communicating outside the local network.   
+Ad ii) In this case, ARP mapping is correct, and the IP is used for communicating to the gateway. But because the target host is not a proper gateway, no traffic from outside the LAN is provided back. |
 | Event       |    |
 | Pcap        | invalid_gateway_address.pcap   |
 | Reference   |    |

@@ -43,6 +43,22 @@
       "environmentVariables": {
         "DISTANCE_PROFILES": "C:\\GitHub\\Distance\\Profiles\\Diagnostics.Soho\\bin\\Debug\\netstandard2.0"
       }
+    },
+    "run invalid_mask.pcap": {
+      "commandName": "Project",
+      "commandLineArgs": "run -profile Diagnostics.Soho  Pcaps\\invalid_mask.pcap",
+      "workingDirectory": "C:\\GitHub\\Distance\\TestData",
+      "environmentVariables": {
+        "DISTANCE_PROFILES": "C:\\GitHub\\Distance\\Profiles\\Diagnostics.Soho\\bin\\Debug\\netstandard2.0"
+      }
+    },
+    "run invalid_gateway_address.pcap": {
+      "commandName": "Project",
+      "commandLineArgs": "run -profile Diagnostics.Soho  Pcaps\\invalid_gateway_address.pcap",
+      "workingDirectory": "C:\\GitHub\\Distance\\TestData",
+      "environmentVariables": {
+        "DISTANCE_PROFILES": "C:\\GitHub\\Distance\\Profiles\\Diagnostics.Soho\\bin\\Debug\\netstandard2.0"
+      }
     }
   }
 }

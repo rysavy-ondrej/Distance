@@ -83,7 +83,8 @@ namespace Distance.Engine.Builder
             };
 
             var formatString = $"{classType.BaseType}: " + String.Join(' ', fields.Select((f, i) => $"{f.FieldName}={{{i}}}"));
-            var formatStringArguments = fields.Select(GetPropertyReferenceExpression).AsEnumerable<CodeExpression>();
+            var formatStringArguments = fields.Select(GetPropertyReferenceExpression).AsEnumerable<CodeExpression>().Select(CallToStringExpression);
+           
 
             method.Statements.Add(
                 new CodeMethodReturnStatement

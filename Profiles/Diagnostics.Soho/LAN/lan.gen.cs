@@ -85,7 +85,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("IpPacket: frame.number={0} eth.src={1} eth.dst={2} ip.src={3} ip.dst={4}", this.FrameNumber, this.EthSrc, this.EthDst, this.IpSrc, this.IpDst);
+            return string.Format("IpPacket: frame.number={0} eth.src={1} eth.dst={2} ip.src={3} ip.dst={4}", Distance.Utils.StringUtils.ToString(this.FrameNumber), Distance.Utils.StringUtils.ToString(this.EthSrc), Distance.Utils.StringUtils.ToString(this.EthDst), Distance.Utils.StringUtils.ToString(this.IpSrc), Distance.Utils.StringUtils.ToString(this.IpDst));
         }
         
         public override int GetHashCode() {
@@ -128,7 +128,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("IpEndpoint: ip.addr={0}", this.IpAddr);
+            return string.Format("IpEndpoint: ip.addr={0}", Distance.Utils.StringUtils.ToString(this.IpAddr));
         }
         
         public override int GetHashCode() {
@@ -157,7 +157,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("IpSourceEndpoint: ip.addr={0}", this.IpAddr);
+            return string.Format("IpSourceEndpoint: ip.addr={0}", Distance.Utils.StringUtils.ToString(this.IpAddr));
         }
         
         public override int GetHashCode() {
@@ -186,7 +186,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("IpDestinationEndpoint: ip.addr={0}", this.IpAddr);
+            return string.Format("IpDestinationEndpoint: ip.addr={0}", Distance.Utils.StringUtils.ToString(this.IpAddr));
         }
         
         public override int GetHashCode() {
@@ -197,6 +197,48 @@ namespace Distance.Diagnostics.Lan {
             IpDestinationEndpoint that = obj as IpDestinationEndpoint;
             return ((that != null) 
                         && object.Equals(this.IpAddr, that.IpAddr));
+        }
+    }
+    
+    public class IpFlow : Distance.Runtime.DistanceDerived {
+        
+        private String _IpSrc;
+        
+        private String _IpDst;
+        
+        [FieldName("ip.src")]
+        public virtual String IpSrc {
+            get {
+                return this._IpSrc;
+            }
+            set {
+                this._IpSrc = value;
+            }
+        }
+        
+        [FieldName("ip.dst")]
+        public virtual String IpDst {
+            get {
+                return this._IpDst;
+            }
+            set {
+                this._IpDst = value;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("IpFlow: ip.src={0} ip.dst={1}", Distance.Utils.StringUtils.ToString(this.IpSrc), Distance.Utils.StringUtils.ToString(this.IpDst));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpSrc, this.IpDst);
+        }
+        
+        public override bool Equals(object obj) {
+            IpFlow that = obj as IpFlow;
+            return (((that != null) 
+                        && object.Equals(this.IpSrc, that.IpSrc)) 
+                        && object.Equals(this.IpDst, that.IpDst));
         }
     }
     
@@ -215,7 +257,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("EthEndpoint: eth.addr={0}", this.EthAddr);
+            return string.Format("EthEndpoint: eth.addr={0}", Distance.Utils.StringUtils.ToString(this.EthAddr));
         }
         
         public override int GetHashCode() {
@@ -256,7 +298,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("GatewayCandidate: ip.addr={0} eth.addr={1}", this.IpAddr, this.EthAddr);
+            return string.Format("GatewayCandidate: ip.addr={0} eth.addr={1}", Distance.Utils.StringUtils.ToString(this.IpAddr), Distance.Utils.StringUtils.ToString(this.EthAddr));
         }
         
         public override int GetHashCode() {
@@ -298,7 +340,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("AddressMapping: ip.addr={0} eth.addr={1}", this.IpAddr, this.EthAddr);
+            return string.Format("AddressMapping: ip.addr={0} eth.addr={1}", Distance.Utils.StringUtils.ToString(this.IpAddr), Distance.Utils.StringUtils.ToString(this.EthAddr));
         }
         
         public override int GetHashCode() {
@@ -340,7 +382,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("LocalNetworkPrefix: ip.network={0} ip.prefix={1}", this.IpNetwork, this.IpPrefix);
+            return string.Format("LocalNetworkPrefix: ip.network={0} ip.prefix={1}", Distance.Utils.StringUtils.ToString(this.IpNetwork), Distance.Utils.StringUtils.ToString(this.IpPrefix));
         }
         
         public override int GetHashCode() {
@@ -352,6 +394,77 @@ namespace Distance.Diagnostics.Lan {
             return (((that != null) 
                         && object.Equals(this.IpNetwork, that.IpNetwork)) 
                         && object.Equals(this.IpPrefix, that.IpPrefix));
+        }
+    }
+    
+    public class LocalNetworkBroadcast : Distance.Runtime.DistanceDerived {
+        
+        private String _IpBroadcast;
+        
+        [FieldName("ip.broadcast")]
+        public virtual String IpBroadcast {
+            get {
+                return this._IpBroadcast;
+            }
+            set {
+                this._IpBroadcast = value;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("LocalNetworkBroadcast: ip.broadcast={0}", Distance.Utils.StringUtils.ToString(this.IpBroadcast));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpBroadcast);
+        }
+        
+        public override bool Equals(object obj) {
+            LocalNetworkBroadcast that = obj as LocalNetworkBroadcast;
+            return ((that != null) 
+                        && object.Equals(this.IpBroadcast, that.IpBroadcast));
+        }
+    }
+    
+    public class BroadcastGroup : Distance.Runtime.DistanceDerived {
+        
+        private String _IpBroadcast;
+        
+        private String[] _IpAddrs;
+        
+        [FieldName("ip.broadcast")]
+        public virtual String IpBroadcast {
+            get {
+                return this._IpBroadcast;
+            }
+            set {
+                this._IpBroadcast = value;
+            }
+        }
+        
+        [FieldName("ip.addrs")]
+        public virtual String[] IpAddrs {
+            get {
+                return this._IpAddrs;
+            }
+            set {
+                this._IpAddrs = value;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("BroadcastGroup: ip.broadcast={0} ip.addrs={1}", Distance.Utils.StringUtils.ToString(this.IpBroadcast), Distance.Utils.StringUtils.ToString(this.IpAddrs));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpBroadcast, this.IpAddrs);
+        }
+        
+        public override bool Equals(object obj) {
+            BroadcastGroup that = obj as BroadcastGroup;
+            return (((that != null) 
+                        && object.Equals(this.IpBroadcast, that.IpBroadcast)) 
+                        && object.Equals(this.IpAddrs, that.IpAddrs));
         }
     }
     
@@ -400,7 +513,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("IpAddressConflict: ip.address={0} eth.addresses={1}", this.IpAddress, this.EthAddresses);
+            return string.Format("IpAddressConflict: ip.address={0} eth.addresses={1}", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.EthAddresses));
         }
         
         public override int GetHashCode() {
@@ -461,7 +574,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("IpAddressMismatch: ip.address={0} eth.address={1}", this.IpAddress, this.EthAddress);
+            return string.Format("IpAddressMismatch: ip.address={0} eth.address={1}", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.EthAddress));
         }
         
         public override int GetHashCode() {
@@ -521,7 +634,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("LinkLocalIpAddressUse: ip.address={0} eth.address={1}", this.IpAddress, this.EthAddress);
+            return string.Format("LinkLocalIpAddressUse: ip.address={0} eth.address={1}", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.EthAddress));
         }
         
         public override int GetHashCode() {
@@ -569,7 +682,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("MultipleDefaultGateways: gateways={0}", this.Gateways);
+            return string.Format("MultipleDefaultGateways: gateways={0}", Distance.Utils.StringUtils.ToString(this.Gateways));
         }
         
         public override int GetHashCode() {
@@ -580,6 +693,115 @@ namespace Distance.Diagnostics.Lan {
             MultipleDefaultGateways that = obj as MultipleDefaultGateways;
             return ((that != null) 
                         && object.Equals(this.Gateways, that.Gateways));
+        }
+    }
+    
+    public class MultipleBroadcastAddresses : Distance.Runtime.DistanceEvent {
+        
+        private BroadcastGroup[] _Broadcasts;
+        
+        [FieldName("broadcasts")]
+        public virtual BroadcastGroup[] Broadcasts {
+            get {
+                return this._Broadcasts;
+            }
+            set {
+                this._Broadcasts = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "MultipleBroadcastAddresses";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("Multiple LAN broadcast addresses were detected ({0}), which means that a network " +
+                        "address mask is not set consistently.", Distance.Utils.StringUtils.ToString(this.Broadcasts));
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("MultipleBroadcastAddresses: broadcasts={0}", Distance.Utils.StringUtils.ToString(this.Broadcasts));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.Broadcasts);
+        }
+        
+        public override bool Equals(object obj) {
+            MultipleBroadcastAddresses that = obj as MultipleBroadcastAddresses;
+            return ((that != null) 
+                        && object.Equals(this.Broadcasts, that.Broadcasts));
+        }
+    }
+    
+    public class InvalidGateway : Distance.Runtime.DistanceEvent {
+        
+        private String _HostIpAddr;
+        
+        private String _GwIpAddr;
+        
+        [FieldName("host.ip.addr")]
+        public virtual String HostIpAddr {
+            get {
+                return this._HostIpAddr;
+            }
+            set {
+                this._HostIpAddr = value;
+            }
+        }
+        
+        [FieldName("gw.ip.addr")]
+        public virtual String GwIpAddr {
+            get {
+                return this._GwIpAddr;
+            }
+            set {
+                this._GwIpAddr = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "InvalidGateway";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format(" Host {0} attempts to use gateway {1} but either the gateway IP is not correct or" +
+                        " the gateway is down.", Distance.Utils.StringUtils.ToString(this.HostIpAddr), Distance.Utils.StringUtils.ToString(this.GwIpAddr));
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("InvalidGateway: host.ip.addr={0} gw.ip.addr={1}", Distance.Utils.StringUtils.ToString(this.HostIpAddr), Distance.Utils.StringUtils.ToString(this.GwIpAddr));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.HostIpAddr, this.GwIpAddr);
+        }
+        
+        public override bool Equals(object obj) {
+            InvalidGateway that = obj as InvalidGateway;
+            return (((that != null) 
+                        && object.Equals(this.HostIpAddr, that.HostIpAddr)) 
+                        && object.Equals(this.GwIpAddr, that.GwIpAddr));
         }
     }
     
@@ -628,7 +850,7 @@ namespace Distance.Diagnostics.Lan {
         }
         
         public override string ToString() {
-            return string.Format("NetBtDuplicateName: host.name={0} ip.addresses={1}", this.HostName, this.IpAddresses);
+            return string.Format("NetBtDuplicateName: host.name={0} ip.addresses={1}", Distance.Utils.StringUtils.ToString(this.HostName), Distance.Utils.StringUtils.ToString(this.IpAddresses));
         }
         
         public override int GetHashCode() {

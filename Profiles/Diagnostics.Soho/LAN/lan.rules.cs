@@ -11,7 +11,7 @@
     using System.Net;
 
 
-    public class IpSourceEndpointRule : DistanceRule
+    public class IpPacketRule : DistanceRule
     {
         public override void Define()
         {
@@ -24,28 +24,21 @@
         }
         private void InsertFacts(IContext ctx, IpPacket packet)
         {
+            ctx.TryInsert(new IpFlow { IpSrc = packet.IpSrc, IpDst = packet.IpDst });
+
             ctx.TryInsert(new IpSourceEndpoint { IpAddr = packet.IpSrc });
             ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpSrc });
             ctx.TryInsert(new AddressMapping { IpAddr = packet.IpSrc, EthAddr = packet.EthSrc });
-        }
-    }
-    public class IpDestinationEndpointRule : DistanceRule
-    {
-        public override void Define()
-        {
-            IpPacket packet = null;
 
-            When()
-                .Match(() => packet);
-            Then()
-                .Do(ctx => InsertFacts(ctx, packet));
-        }
-
-        private void InsertFacts(IContext ctx, IpPacket packet)
-        {
             ctx.TryInsert(new IpDestinationEndpoint { IpAddr = packet.IpDst });
             ctx.TryInsert(new IpEndpoint { IpAddr = packet.IpDst });
             ctx.TryInsert(new AddressMapping { IpAddr = packet.IpDst, EthAddr = packet.EthDst });
+
+            if (packet.EthDst == "ff:ff:ff:ff:ff:ff" && packet.IpDst != "255.255.255.255")
+            {
+                var f = new LocalNetworkBroadcast { IpBroadcast = packet.IpDst };
+                ctx.TryInsert(f);
+            }
         }
     }
 
@@ -88,21 +81,28 @@
         public override void Define()
         {
             IEnumerable<string> localAddresses = null;
+            IEnumerable<string> broadcastAddresses = null;
             When()
                 .Query(() => localAddresses, q => q
                     .Match<ArpAddressMapping>()
                     .Select(x => x.IpAddr)
+                    .Collect())
+                .Query(() => broadcastAddresses, q => q
+                    .Match<LocalNetworkBroadcast>()
+                    .Select(x => x.IpBroadcast)
                     .Collect());
 
             Then()
-                .Do(ctx => ComputePrefixes(ctx, localAddresses));
+                .Do(ctx => ComputePrefixes(ctx, localAddresses, broadcastAddresses));
         }
 
-        private void ComputePrefixes(IContext ctx, IEnumerable<string> localAddresses)
+        private void ComputePrefixes(IContext ctx, IEnumerable<string> localAddresses, IEnumerable<string> broadcastAddresses)
         {
             if (localAddresses == null || localAddresses.Count() == 0) return;
+            var addresses = broadcastAddresses!=null ? localAddresses.Union(broadcastAddresses): localAddresses;
+
             // compute wildcard:
-            var wc = localAddresses.Select(s => (Address:IPAddress.Parse(s),Prefix:32)).Aggregate((x,y) => IPAddressUtils.CommonPrefix(x.Address, x.Prefix,y.Address, y.Prefix));
+            var wc = addresses.Select(s => (Address:IPAddress.Parse(s),Prefix:32)).Aggregate((x,y) => IPAddressUtils.CommonPrefix(x.Address, x.Prefix,y.Address, y.Prefix));
             ctx.Info($"Local prefix: {wc.Address}/{wc.Prefix}");
             ctx.TryInsert(new LocalNetworkPrefix { IpNetwork = wc.Address.ToString(), IpPrefix = wc.Prefix });
         }
@@ -134,9 +134,6 @@
         }
 
     }
-
-
-
 
     public class DuplicateAddressRule : DistanceRule
     {
@@ -195,4 +192,84 @@
                  .Yield(_ => new LinkLocalIpAddressUse { IpAddress = ipSrc.IpAddr, EthAddress = mapping.EthAddr });
         }
     }
+
+    /// <summary>
+    /// Can be detected by checking LAN broadcasts. It is ok, if there is only one LAN broadcasts.
+    /// </summary>
+    public class InvalidNetworkMaskRule : DistanceRule
+    {
+        public override void Define()
+        {
+            IEnumerable<BroadcastGroup> broadcasts = null;
+            When()
+                .Query(() => broadcasts, q => q
+                    .Match<BroadcastGroup>()
+                    .Collect());
+            Then()
+                .Do(ctx => Check(ctx, broadcasts.ToArray()));
+        }
+
+        private void Check(IContext ctx, BroadcastGroup[] broadcasts)
+        {
+            if (broadcasts.Count() > 1)
+            {
+                ctx.TryInsert(new MultipleBroadcastAddresses { Broadcasts = broadcasts });
+            }
+        }
+    }
+
+    public class CollectBroadcastersRule : DistanceRule
+    { 
+        public override void Define()
+        {
+            LocalNetworkBroadcast bcast = null; 
+            IEnumerable<IpFlow> flows = null;
+            When()
+                .Match(() => bcast)
+                .Query(() => flows, q =>
+                    (from f in q.Match<IpFlow>()
+                    where f.IpDst == bcast.IpBroadcast 
+                    select f).Collect());
+            Then()
+                .Do(ctx => CheckNetworkMask(ctx, bcast, flows.ToArray()));
+        }
+
+        private void CheckNetworkMask(IContext ctx, LocalNetworkBroadcast bcast, IpFlow[] flows)
+        {
+                var bcasts = new BroadcastGroup
+                {
+                    IpBroadcast = bcast.IpBroadcast,
+                    IpAddrs = flows.Select(x => x.IpSrc).ToArray()
+                };
+                ctx.TryInsert(bcasts);
+        }
+    }
+
+    public class InvalidGatewayAddressRule : DistanceRule
+    {
+        IPAddress multicastIp = IPAddress.Parse("224.0.0.0");
+        public override void Define()
+        {
+            LocalNetworkPrefix localPrefix = null;
+            ArpUnanswered hostArp = null;
+            When()
+                .Match(() => localPrefix)
+                .Match(() => hostArp)
+                .All<IpFlow>(f => f.IpSrc == hostArp.Request.ArpSrcProtoIpv4 && IsLocalOrMulticast(f.IpDst, localPrefix));
+            Then()
+                .Do(ctx => CheckGw(ctx, hostArp));
+        }
+        bool IsLocalOrMulticast(string ipAddr, LocalNetworkPrefix localNetworkPrefix)
+        {
+            var ip = IPAddress.Parse(ipAddr);
+            var isLocal =  ip.BelongsTo(IPAddress.Parse(localNetworkPrefix.IpNetwork), localNetworkPrefix.IpPrefix);
+            var isMulticast = ip.BelongsTo(multicastIp, 3);
+            return isLocal || isMulticast;
+        }
+        private void CheckGw(IContext ctx, ArpUnanswered badGwArp)
+        {
+            ctx.TryInsert(new InvalidGateway { HostIpAddr = badGwArp.Request.ArpSrcProtoIpv4, GwIpAddr = badGwArp.Request.ArpDstProtoIpv4 });    
+        }
+    }
+
 }
