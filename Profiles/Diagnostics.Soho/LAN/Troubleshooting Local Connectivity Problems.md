@@ -88,9 +88,7 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Name        | Invalid gateway address   |
 | Description | The host has configured invalid or unreachable local gateway. The provided IP address for the gateway is not correct. |
 | Example     | The correct gateway address is 192.168.99.1 but the host uses 192.168.99.254.   |
-| Evidence    | There are different possible options. i) The gateway is set to IP address not existing in the LAN. ii) The gateway is set to IP of a host, which is not a proper gateway in the LAN. 
-Ad i) To detect this situation it is sufficient to check that there are unresolved ARP requests of the host and the host is not communicating outside the local network.   
-Ad ii) In this case, ARP mapping is correct, and the IP is used for communicating to the gateway. But because the target host is not a proper gateway, no traffic from outside the LAN is provided back. |
+| Evidence    | There are different possible options. i) The gateway is set to IP address not existing in the LAN. ii) The gateway is set to IP of a host, which is not a proper gateway in the LAN. Ad i) To detect this situation it is sufficient to check that there are unresolved ARP requests of the host and the host is not communicating outside the local network. Ad ii) In this case, ARP mapping is correct, and the IP is used for communicating to the gateway. But because the target host is not a proper gateway, no traffic from outside the LAN is provided back. |
 | Event       |    |
 | Pcap        | invalid_gateway_address.pcap   |
 | Reference   |    |
