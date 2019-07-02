@@ -347,3 +347,5 @@ ASALocalRun/
 .vagrant/rgloader/loader.rb
 TestData/Pcaps/test.evt
 *.evt
+*.dgml
+*.graphml
