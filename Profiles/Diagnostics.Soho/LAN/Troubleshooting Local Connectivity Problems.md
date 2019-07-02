@@ -94,7 +94,18 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Reference   |    |
 
 
-### ARP Relate errors
+### ARP Related errors
+
+| Id          | arp.   |
+| ----------- | -- |
+| Name        | Bad padding in ARP packets.   |
+| Description |    |
+| Example     |    |
+| Event       |    |
+| Pcap        |    |
+| Reference   |    |
+
+
 
 
 ### NetBIOS related errors

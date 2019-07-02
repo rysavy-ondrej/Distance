@@ -21,6 +21,7 @@ namespace Distance.Engine.Builder
             this.ClassName = name.ToCamelCase();
             this.m_typeDeclaration = new CodeTypeDeclaration(ClassName);
             this.m_typeReference = new CodeTypeReference(ClassName);
+            m_typeDeclaration.IsPartial = true;
         }
 
         
