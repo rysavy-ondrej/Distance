@@ -79,7 +79,7 @@ namespace Distance.Engine.Runner
         {
             var session = (ISessionSnapshotProvider)target;
             var snapshot = session.GetSnapshot();
-            var dgmlWriter = new GraphMLWriter(snapshot);
+            var dgmlWriter = new GraphWriter(snapshot);
             using (var xmlWriter = XmlWriter.Create(dgmlPath))
             {
                 dgmlWriter.WriteTo(xmlWriter);
@@ -131,8 +131,8 @@ namespace Distance.Engine.Runner
             sw.Start();
             Console.WriteLine($"│┌ Loading facts from '{pcapPath}':");
             var facts = m_diagnosticProfileAssemblies.SelectMany(x => FactsLoaderFactory.FindDerivedTypes(x, typeof(DistanceFact))).ToList();
-            var factsLoader = FactsLoaderFactory.Create<SharkFactsLoader>(facts, 
-                info => Console.WriteLine($"│├─ start loading {info.FactType.Name} facts."), 
+            var factsLoader = FactsLoaderFactory.Create<SharkFactsLoader>(facts,
+                info => Console.WriteLine($"│├─ start loading {info.FactType.Name} facts."),
                 (info, count) => Console.WriteLine($"│├─ stop loading {info.FactType.Name} facts ({count})."));
 
             int allFactsCount = 0;

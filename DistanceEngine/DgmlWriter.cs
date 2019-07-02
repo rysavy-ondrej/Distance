@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -6,13 +7,13 @@ using NRules.Diagnostics;
 
 namespace NRules.Diagnostics
 {
-    public class GraphMLWriter
+    public class GraphWriter
     {
         private readonly Dictionary<NodeInfo, int> _idMap;
         private readonly SessionSnapshot _snapshot;
-        private readonly XNamespace _namespace = XNamespace.Get("http://graphml.graphdrawing.org/xmlns");
+        private readonly XNamespace _namespace = XNamespace.Get("http://www.gexf.net/1.2draft");
 
-        public GraphMLWriter(SessionSnapshot snapshot)
+        public GraphWriter(SessionSnapshot snapshot)
         {
             _snapshot = snapshot;
 
@@ -25,11 +26,16 @@ namespace NRules.Diagnostics
         {
             var document = new XDocument(new XDeclaration("1.0", "utf-8", null));
 
-            var root = new XElement(Name("graphml"));
-            var graph = new XElement(Name("graph"), new XAttribute("id", "ReteNetwork"), new XAttribute("edgedefault","directed"));
-
-            WriteNodes(graph);
-            WriteLinks(graph);
+            var root = new XElement(Name("gexf"));
+            var meta = new XElement(Name("meta"), new XAttribute("lastmodifieddate", DateTime.Now.ToShortDateString()),
+                new XElement(Name("creator"), "DistanceEngine"), new XElement(Name("description"),"Rete Network"));
+            var graph = new XElement(Name("graph"), new XAttribute("mode", "static"), new XAttribute("defaultedgetype", "directed"));
+            var nodes = new XElement(Name("nodes"));
+            var edges = new XElement(Name("edges"));
+            WriteNodes(nodes);
+            WriteLinks(edges);
+            graph.Add(nodes);
+            graph.Add(edges);
             root.Add(graph);
             document.Add(root);
             document.WriteTo(writer);
@@ -46,14 +52,14 @@ namespace NRules.Diagnostics
                 string label = string.Join("\n", labelComponents);
                 var node = new XElement(Name("node"),
                                         new XAttribute("id", Id(nodeInfo)),
-                                        new XElement("data", new XText(label)));
+                                        new XAttribute("label",label));
                 nodes.Add(node);
 
                 for (int i = 0; i < nodeInfo.Items.Length; i++)
                 {
                     var itemNode = new XElement(Name("node"),
                         new XAttribute("id", SubNodeId(nodeInfo, i)),
-                        new XElement("data", new XText(nodeInfo.Items[i])));
+                        new XAttribute("data", nodeInfo.Items[i]));
                     nodes.Add(itemNode);
                 }
             }
