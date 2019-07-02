@@ -1,6 +1,7 @@
 ﻿using Distance.Runtime;
 using NLog;
 using NRules;
+using NRules.Diagnostics;
 using NRules.Fluent;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace Distance.Engine.Runner
 {
@@ -43,6 +45,7 @@ namespace Distance.Engine.Runner
             if (File.Exists(logPath)) File.Delete(logPath);
             var eventPath = Path.ChangeExtension(pcapPath, "evt");
             if (File.Exists(eventPath)) File.Delete(eventPath);
+            var dgmlPath = Path.ChangeExtension(pcapPath, "graphml");
 
             Context.ConfigureLog(logPath, eventPath);
             var logger = LogManager.GetLogger(Context.DistanceOutputLoggerName);
@@ -56,6 +59,10 @@ namespace Distance.Engine.Runner
             Console.WriteLine("┌ Creating a session...");
             var session = sessionFactory.CreateSession();
             Console.WriteLine($"└ done [{sw.Elapsed}].");
+
+            // Write RETE of a session to DGML file for visualization...
+            DumpReteToFile(session, dgmlPath);
+
             sw.Restart();
             Console.WriteLine("┌ Processing...");
 
@@ -66,6 +73,18 @@ namespace Distance.Engine.Runner
             Console.WriteLine($"├─ Diagnostic Log written to '{logPath}'.");
             Console.WriteLine($"├─ Diagnostic Events written to '{eventPath}'.");
             Console.WriteLine($"└ done [{sw.Elapsed}].");
+        }
+
+        private void DumpReteToFile(ISession target, string dgmlPath)
+        {
+            var session = (ISessionSnapshotProvider)target;
+            var snapshot = session.GetSnapshot();
+            var dgmlWriter = new GraphMLWriter(snapshot);
+            using (var xmlWriter = XmlWriter.Create(dgmlPath))
+            {
+                dgmlWriter.WriteTo(xmlWriter);
+            }
+
         }
 
         private async Task FireRulesAsync(ISession session)

@@ -24,10 +24,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestData", "TestData", "{BA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcaps", "Pcaps", "{93174194-A8AD-480C-BB19-A22DAE4A996E}"
 	ProjectSection(SolutionItems) = preProject
+		TestData\Pcaps\arp-badpadding.dgml = TestData\Pcaps\arp-badpadding.dgml
 		TestData\Pcaps\test.pcap = TestData\Pcaps\test.pcap
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diagnostics.Soho.Test", "Profiles\Diagnostics.Soho.Test\Diagnostics.Soho.Test.csproj", "{17C75A65-FF49-43FA-957C-0EC3E041133C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagnostics.Soho.Test", "Profiles\Diagnostics.Soho.Test\Diagnostics.Soho.Test.csproj", "{17C75A65-FF49-43FA-957C-0EC3E041133C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
