@@ -54,7 +54,7 @@
     },
     "run invalid_gateway_address.pcap": {
       "commandName": "Project",
-      "commandLineArgs": "run -profile Diagnostics.Soho  Pcaps\\invalid_gateway_address.pcap",
+      "commandLineArgs": "run -profile Diagnostics.Soho  Pcaps\\lan-invalid_gateway.pcap",
       "workingDirectory": "C:\\GitHub\\Distance\\TestData",
       "environmentVariables": {
         "DISTANCE_PROFILES": "C:\\GitHub\\Distance\\Profiles\\Diagnostics.Soho\\bin\\Debug\\netstandard2.0"

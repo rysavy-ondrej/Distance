@@ -9,8 +9,8 @@ facts:
       - string    eth.src 
       - string    eth.dst 
       - int32     arp.opcode
-      - string    arp.src.hw
-      - string    arp.dst.hw
+      - string    arp.src.hw_mac
+      - string    arp.dst.hw_mac
       - string    arp.src.proto_ipv4
       - string    arp.dst.proto_ipv4
       - string    eth.padding 

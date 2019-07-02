@@ -107,20 +107,18 @@
     {
         public override void Define()
         {
-            IEnumerable<string> localAddresses = null;
-            IEnumerable<string> broadcastAddresses = null;
+            IEnumerable<ArpAddressMapping> localAddresses = null;
+            IEnumerable<LocalNetworkBroadcast> broadcastAddresses = null;
             When()
                 .Query(() => localAddresses, q => q
                     .Match<ArpAddressMapping>()
-                    .Select(x => x.IpAddr)
                     .Collect())
                 .Query(() => broadcastAddresses, q => q
                     .Match<LocalNetworkBroadcast>()
-                    .Select(x => x.IpBroadcast)
                     .Collect());
 
             Then()
-                .Do(ctx => ComputePrefixes(ctx, localAddresses, broadcastAddresses));
+                .Do(ctx => ComputePrefixes(ctx, localAddresses.Select(x=>x.IpAddr), broadcastAddresses.Select(x=>x.IpBroadcast)));
         }
 
         private void ComputePrefixes(IContext ctx, IEnumerable<string> localAddresses, IEnumerable<string> broadcastAddresses)
@@ -149,7 +147,7 @@
                 .Match(() => localNetworkPrefix)
                 .Query(() => addressClass, q => q
                     .Match<AddressMapping>()
-                    .GroupBy(m =>  LanRulesHelper.GetAddressScope(m.IpAddr, localNetworkPrefix)));
+                    .GroupBy(m => LanRulesHelper.GetAddressScope(m.IpAddr, localNetworkPrefix)));
             Then()
                 .Do(ctx => ctx.Info($"{addressClass.Key} hosts: {StringUtils.ToString(addressClass.ToArray())}"));
         }

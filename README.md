@@ -126,3 +126,43 @@ While it is still too early to evaluate the performance, the following table con
 | PacketDotNet    | included     | https://github.com/chmorgan/packetnet                | GNU Lesser General Public License v3.0 | 
 | Newtonsoft.Json | included     | https://www.newtonsoft.com/json                      | MIT Licence                            |
 | NLog            | included     | https://nlog-project.org/                            | BSD license                            | 
+
+
+## TODO
+
+### Distance DSL
+Analyze rules and identify common patterns to propose DSL extensions, which simplify the rule representation (https://github.com/NRules/NRules/wiki/DSL-Extensions)
+
+
+## Notes on the usage of NRules
+
+### Select in Queries
+Using Select in Query expression in When statement causes that NRules tries to 
+index the selected member, which may cause an exception if the member is not unique among all input facts.
+For instance, the following code: 
+```
+IEnumerable<string> localAddresses = null;
+When()
+  .Query(() => localAddresses, q => q
+  .Match<ArpAddressMapping>()
+  .Select(x=>x.IpAddr)
+  .Collect());
+```
+causes that exception is raised when two `ArpAddressMapping` that have the same `IpAddr` value and different `EthAddr` values are inserted:
+```
+ctx.TryInsert(new ArpAddressMapping { EthAddr = "aa:aa:aa:aa:aa:aa", IpAddr = "1.1.1.1" });
+ctx.TryInsert(new ArpAddressMapping { EthAddr = "bb:bb:bb:bb:bb:bb", IpAddr = "1.1.1.1" });
+```
+
+To overcome this problem, do not use `Select` in the query as shown in the following snippet, which is fine:
+```
+IEnumerable<ArpAddressMapping> localAddresses = null;
+When()
+  .Query(() => localAddresses, q => q
+  .Match<ArpAddressMapping>()
+  .Collect());
+```
+The required values can still be obtained by applying Select on the resulting enumerable:
+```
+.Do(ctx => ComputePrefixes(ctx, localAddresses.Select(x=>x.IpAddr));
+```

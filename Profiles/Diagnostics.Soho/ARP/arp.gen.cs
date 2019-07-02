@@ -25,9 +25,9 @@ namespace Distance.Diagnostics.Arp {
         
         private Int32 _ArpOpcode;
         
-        private String _ArpSrcHw;
+        private String _ArpSrcHwMac;
         
-        private String _ArpDstHw;
+        private String _ArpDstHwMac;
         
         private String _ArpSrcProtoIpv4;
         
@@ -43,8 +43,8 @@ namespace Distance.Diagnostics.Arp {
                 "eth.src",
                 "eth.dst",
                 "arp.opcode",
-                "arp.src.hw",
-                "arp.dst.hw",
+                "arp.src.hw_mac",
+                "arp.dst.hw_mac",
                 "arp.src.proto_ipv4",
                 "arp.dst.proto_ipv4",
                 "eth.padding"};
@@ -99,23 +99,23 @@ namespace Distance.Diagnostics.Arp {
             }
         }
         
-        [FieldName("arp.src.hw")]
-        public virtual String ArpSrcHw {
+        [FieldName("arp.src.hw_mac")]
+        public virtual String ArpSrcHwMac {
             get {
-                return this._ArpSrcHw;
+                return this._ArpSrcHwMac;
             }
             set {
-                this._ArpSrcHw = value;
+                this._ArpSrcHwMac = value;
             }
         }
         
-        [FieldName("arp.dst.hw")]
-        public virtual String ArpDstHw {
+        [FieldName("arp.dst.hw_mac")]
+        public virtual String ArpDstHwMac {
             get {
-                return this._ArpDstHw;
+                return this._ArpDstHwMac;
             }
             set {
-                this._ArpDstHw = value;
+                this._ArpDstHwMac = value;
             }
         }
         
@@ -151,12 +151,12 @@ namespace Distance.Diagnostics.Arp {
         
         public override string ToString() {
             return string.Format("ArpPacket: frame.number={0} frame.time_relative={1} eth.src={2} eth.dst={3} arp.o" +
-                    "pcode={4} arp.src.hw={5} arp.dst.hw={6} arp.src.proto_ipv4={7} arp.dst.proto_ipv" +
-                    "4={8} eth.padding={9}", Distance.Utils.StringUtils.ToString(this.FrameNumber), Distance.Utils.StringUtils.ToString(this.FrameTimeRelative), Distance.Utils.StringUtils.ToString(this.EthSrc), Distance.Utils.StringUtils.ToString(this.EthDst), Distance.Utils.StringUtils.ToString(this.ArpOpcode), Distance.Utils.StringUtils.ToString(this.ArpSrcHw), Distance.Utils.StringUtils.ToString(this.ArpDstHw), Distance.Utils.StringUtils.ToString(this.ArpSrcProtoIpv4), Distance.Utils.StringUtils.ToString(this.ArpDstProtoIpv4), Distance.Utils.StringUtils.ToString(this.EthPadding));
+                    "pcode={4} arp.src.hw_mac={5} arp.dst.hw_mac={6} arp.src.proto_ipv4={7} arp.dst.p" +
+                    "roto_ipv4={8} eth.padding={9}", Distance.Utils.StringUtils.ToString(this.FrameNumber), Distance.Utils.StringUtils.ToString(this.FrameTimeRelative), Distance.Utils.StringUtils.ToString(this.EthSrc), Distance.Utils.StringUtils.ToString(this.EthDst), Distance.Utils.StringUtils.ToString(this.ArpOpcode), Distance.Utils.StringUtils.ToString(this.ArpSrcHwMac), Distance.Utils.StringUtils.ToString(this.ArpDstHwMac), Distance.Utils.StringUtils.ToString(this.ArpSrcProtoIpv4), Distance.Utils.StringUtils.ToString(this.ArpDstProtoIpv4), Distance.Utils.StringUtils.ToString(this.EthPadding));
         }
         
         public override int GetHashCode() {
-            return Distance.Utils.HashFunction.GetHashCode(this.FrameNumber, this.FrameTimeRelative, this.EthSrc, this.EthDst, this.ArpOpcode, this.ArpSrcHw, this.ArpDstHw, this.ArpSrcProtoIpv4, this.ArpDstProtoIpv4, this.EthPadding);
+            return Distance.Utils.HashFunction.GetHashCode(this.FrameNumber, this.FrameTimeRelative, this.EthSrc, this.EthDst, this.ArpOpcode, this.ArpSrcHwMac, this.ArpDstHwMac, this.ArpSrcProtoIpv4, this.ArpDstProtoIpv4, this.EthPadding);
         }
         
         public override bool Equals(object obj) {
@@ -167,8 +167,8 @@ namespace Distance.Diagnostics.Arp {
                         && object.Equals(this.EthSrc, that.EthSrc)) 
                         && object.Equals(this.EthDst, that.EthDst)) 
                         && object.Equals(this.ArpOpcode, that.ArpOpcode)) 
-                        && object.Equals(this.ArpSrcHw, that.ArpSrcHw)) 
-                        && object.Equals(this.ArpDstHw, that.ArpDstHw)) 
+                        && object.Equals(this.ArpSrcHwMac, that.ArpSrcHwMac)) 
+                        && object.Equals(this.ArpDstHwMac, that.ArpDstHwMac)) 
                         && object.Equals(this.ArpSrcProtoIpv4, that.ArpSrcProtoIpv4)) 
                         && object.Equals(this.ArpDstProtoIpv4, that.ArpDstProtoIpv4)) 
                         && object.Equals(this.EthPadding, that.EthPadding));
@@ -181,8 +181,8 @@ namespace Distance.Diagnostics.Arp {
             newObj._EthSrc = mapper.Invoke("eth.src", values[2]).ToString();
             newObj._EthDst = mapper.Invoke("eth.dst", values[3]).ToString();
             newObj._ArpOpcode = mapper.Invoke("arp.opcode", values[4]).ToInt32();
-            newObj._ArpSrcHw = mapper.Invoke("arp.src.hw", values[5]).ToString();
-            newObj._ArpDstHw = mapper.Invoke("arp.dst.hw", values[6]).ToString();
+            newObj._ArpSrcHwMac = mapper.Invoke("arp.src.hw_mac", values[5]).ToString();
+            newObj._ArpDstHwMac = mapper.Invoke("arp.dst.hw_mac", values[6]).ToString();
             newObj._ArpSrcProtoIpv4 = mapper.Invoke("arp.src.proto_ipv4", values[7]).ToString();
             newObj._ArpDstProtoIpv4 = mapper.Invoke("arp.dst.proto_ipv4", values[8]).ToString();
             newObj._EthPadding = mapper.Invoke("eth.padding", values[9]).ToString();
@@ -304,11 +304,14 @@ namespace Distance.Diagnostics.Arp {
     }
     
     public partial class ArpAddressMapping : Distance.Runtime.DistanceDerived {
-        
+
+       
+
         private String _IpAddr;
         
         private String _EthAddr;
-        
+
+
         [FieldName("ip.addr")]
         public virtual String IpAddr {
             get {

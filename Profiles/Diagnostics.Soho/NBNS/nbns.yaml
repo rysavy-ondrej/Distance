@@ -1,0 +1,16 @@
+meta:
+  namespace: Distance.Diagnostics.Nbns
+facts:
+  - name: NbnsPacket
+    where: nbns
+    select: 
+      - int32     frame.number
+      - string    ip.src
+      - string    ip.dst
+      - int32     nbns.id
+      - int32     nbns.flags.response 
+      - int32     nbns.flags.opcode         
+derived:
+
+rules:
+ 

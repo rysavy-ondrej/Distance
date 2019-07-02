@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2003
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28902.138
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistanceEngine", "DistanceEngine\DistanceEngine.csproj", "{FBACF9DA-CF82-4794-9DEE-80E2B5DD92C4}"
 EndProject
@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcaps", "Pcaps", "{93174194
 	ProjectSection(SolutionItems) = preProject
 		TestData\Pcaps\test.pcap = TestData\Pcaps\test.pcap
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diagnostics.Soho.Test", "Profiles\Diagnostics.Soho.Test\Diagnostics.Soho.Test.csproj", "{17C75A65-FF49-43FA-957C-0EC3E041133C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{2C87E663-DFB3-43E4-A1C6-D20A083554FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C87E663-DFB3-43E4-A1C6-D20A083554FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C87E663-DFB3-43E4-A1C6-D20A083554FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +66,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{2C87E663-DFB3-43E4-A1C6-D20A083554FE} = {D863AF84-A428-49B0-B10C-714B688D5D80}
 		{93174194-A8AD-480C-BB19-A22DAE4A996E} = {BADBB87B-56B4-47BE-9434-F96A828B4653}
+		{17C75A65-FF49-43FA-957C-0EC3E041133C} = {D863AF84-A428-49B0-B10C-714B688D5D80}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {44B6B909-7C95-4381-BB1C-28D636D53A97}
