@@ -115,6 +115,7 @@ namespace Distance.Diagnostics.Arp
                 .Query(() => group, q => q
                     .Match<ArpAddressMapping>()
                     .GroupBy(m => m.IpAddr)
+                    .Where(m => m.Count() > 1)
                  );
             Then()
                 .Do(ctx => InfoAndEmit(ctx, group));
@@ -123,8 +124,48 @@ namespace Distance.Diagnostics.Arp
         private void InfoAndEmit(IContext ctx, IGrouping<string, ArpAddressMapping> group)
         {
             var macs = group.Select(x => x.EthAddr).ToArray();
-            ctx.Error($"Duplicate ARP address mapping detected: {group.Key} has resolutions to {StringUtils.ToString(macs)}. Bad IP address assignement or APR poissoning is in progress.");
-            ctx.TryInsert(new IpAddressConflict { IpAddress = group.Key, EthAddresses = macs });
+            ctx.Error($"Duplicate ARP address mapping detected: {group.Key} resolved to {StringUtils.ToString(macs)}. Bad IP address assignement or APR poissoning is in progress.");
+            ctx.TryInsert(new ArpAddressConflict { IpAddress = group.Key, EthAddresses = macs });
+        }
+    }
+
+    public class DetectArpSweepRule : DistanceRule
+    {
+        const int requestsThreshold = 30;
+        const double timeIntervalLimit = 0.5;
+        public override void Define()
+        {
+            IGrouping<string, ArpPacket> group = null;
+            When()
+                .Query(() => group, q => q
+                    .Match<ArpPacket>(p => p.Opcode == ArpOpcode.Request)
+                    .GroupBy(p => p.ArpSrcProtoIpv4)
+                );
+            Then()
+                .Do(ctx => TestAndEmit(ctx, group));
+        }
+
+
+        /// <summary>
+        /// Tests if ARP rerquests may represent an ARP sweep operation.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="group"></param>
+        /// <remarks>
+        /// ARP sweep is characterizes as sending more than X ARP requests to different addresses
+        /// within Y seconds. 
+        /// </remarks>
+        private void TestAndEmit(IContext ctx, IGrouping<string, ArpPacket> group)
+        {
+            // the solution here is simple: group packets to windows of the specified lenght and compute 
+            // if their number exceeds the given threshold
+            var windows = group.GroupBy(x => (int)Math.Floor(x.FrameTimeRelative / timeIntervalLimit));
+            var sweepWindow = windows.FirstOrDefault(x=> x.Count() > requestsThreshold);
+            if (sweepWindow != null)
+            {
+                ctx.Warn($"ARP sweep detected: {group.Key} sends {sweepWindow.Count()} requests within {timeIntervalLimit} seconds.");
+                ctx.TryInsert(new ArpSweepAttempt { IpAddress = group.Key, IpTargets = sweepWindow.Select(x=>x.ArpDstProtoIpv4).ToArray() });
+            }
         }
     }
 }

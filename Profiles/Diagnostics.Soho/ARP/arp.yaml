@@ -38,3 +38,19 @@ derived:
     fields:       
       - string ip.addr
       - string eth.addr
+events:
+  - name: ArpAddressConflict
+    severity:     error
+    description:  "Duplicate IP address assignment detected. Two or more MAC addresses share the same IP address."
+    message:      "Two or more network hosts claimed ownership of the same network address {ip.address}: {eth.addresses}. Invalid IP address configuration or ARP spoofing is in progress."
+    fields:
+      - string    ip.address
+      - string[]  eth.addresses
+
+  - name: ArpSweepAttempt
+    severity:     warning
+    description:  "ARP sweep attempt detected. The number of ARP requests from a host is above the specified threshold."
+    message:      "Host {ip.address} performs ARP Sweep that allows to enumerate live hosts in the local network using ARP requests send to the following (incomplete) list of targets: [{ip.targets}]."
+    fields:
+      - string    ip.address
+      - string[]  ip.targets

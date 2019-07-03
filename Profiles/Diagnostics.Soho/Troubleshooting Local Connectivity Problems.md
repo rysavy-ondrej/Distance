@@ -48,7 +48,7 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Description | If two devices have been configured with the same IP address we can see packets sourced from the single IP address but having different hardware addresses. |
 | Example     | For instance, hosts with mac addresses aa:aa:aa:aa:aa:aa and bb:bb:bb:bb:bb:bb both use 192.168.1.113/24. |
 | Evidence    | We can see IP packets that for the same source (destination) IP address contains different source (destination) ethernet addresses. |
-| Event       | IpAddressConflict(string ip.address, string[] eth.addresses) |
+| Event       | IpAddressConflict{IpAddress:string, EthAddresses:string[]} |
 | Pcap        | ip_conflict.pcap |
 | Expected    | `ERROR|DISTANCE.EVTS|IpAddressConflict: Two or more network hosts has assigned the same network address 192.168.114.100: 00:0c:29:62:79:a2,00:0c:29:ac:af:38.`|
 | Reference   | |
@@ -60,7 +60,7 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Description | The IP address of a host does not belong to the local LAN address space configured. |
 | Example     | For instance, LAN uses 192.168.1.0/24, but the host has configured 10.10.10.121/24. |
 | Evidence    | We can see unanswered ARP requests as the host tries to find the network gateway. Also, the invalid IP address appears only as the source address in IP packets. |
-| Event       | IpAddressMismatch(string ip.address, string neth.address) |
+| Event       | IpAddressMismatch{IpAddress:string, EthAddress:string) |
 | Pcap        | ip_mismatch.pcap |
 | Reference   | |
 
@@ -69,7 +69,7 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Name        | Link-local address in use  |
 | Description | No IP address is configured, the host tries DHCP and if this fails it generates a link-local address (169.254.0.0/16). |
 | Example     | Host uses one of the link-local address automatically assigned if dynamic configuration fails.|
-| Event       | LocalAddressInUse(string ip.address, string eth.address) |
+| Event       | LocalAddressInUse{IpAddress: string, EthAddress:string} |
 | Pcap        | local_ip_use.pcap |
 | Reference   | |
 
@@ -79,7 +79,7 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Description | The host has correct IP address but the mask is incorrect. This may cause that some remote hosts are unreachable.  |
 | Example     | The network has address 192.168.114.0/24. One of the host has however configured 192.168.0.0/16.   |
 | Evidence    | Some services uses network broadcast to query or announce to all local nodes, e.g., BROWSER or NBNS. The broadcast message  is identified as using broadcast destination mac address (ff:ff:ff:ff:ff:ff). The destination IP address is LAN broadcast and thus we may use this information to identify whether there are two or more different IP broadcasts addresses in use.  In the considered example, we have 'ff:ff:ff:ff:ff:ff, 192.168.114.255' and  'ff:ff:ff:ff:ff:ff, 192.168.255.255'. |
-| Event       | MultipleBroadcastAddresses(BroadcastGroup[] broadcasts)   |
+| Event       | MultipleBroadcastAddresses{Broadcasts: BroadcastGroup[]}   |
 | Pcap        | invalid_mask.pcap   |
 | Reference   |    |
 
@@ -89,23 +89,42 @@ user@ubuntu1: sudo tcpdump -i ens192 -w <output-file>
 | Description | The host has configured invalid or unreachable local gateway. The provided IP address for the gateway is not correct. |
 | Example     | The correct gateway address is 192.168.99.1 but the host uses 192.168.99.254.   |
 | Evidence    | There are different possible options. i) The gateway is set to IP address not existing in the LAN. ii) The gateway is set to IP of a host, which is not a proper gateway in the LAN. Ad i) To detect this situation it is sufficient to check that there are unresolved ARP requests of the host and the host is not communicating outside the local network. Ad ii) In this case, ARP mapping is correct, and the IP is used for communicating to the gateway. But because the target host is not a proper gateway, no traffic from outside the LAN is provided back. |
-| Event       |    |
+| Event       | InvalidGateway{HostIpAddr:string, GwIpAddr:string}  |
 | Pcap        | invalid_gateway_address.pcap   |
 | Reference   |    |
 
 
 ### ARP Related errors
 
-| Id          | arp.   |
+| Id          | arp.1   |
 | ----------- | -- |
-| Name        | Bad padding in ARP packets.   |
-| Description |    |
-| Example     |    |
-| Event       |    |
-| Pcap        | apr_   |
+| Name        | Bad Arp Padding   |
+| Description | ARP packets are shorter than the minimum required Ethernet frame size. Thus they need to be padded. Secure padding should not exploit any data from the host's memory.   |
+| Example     | The incorrect implementation uses a buffer that was not zeroed causing that information may leak through padding bytes. TO identify this issue the padding bytes are tested. |
+| Event       | ArpNonZeroPadding{Host:string}  |
+| Pcap        | apr-badpadding.pcapng   |
 | Reference   |    |
 
 
+| Id          | arp.2   |
+| ----------- | -- |
+| Name        | ARP Address Poisoning   |
+| Description | ARP address spoofing is a technique by which an attacker sends (spoofed) Address Resolution Protocol (ARP) messages onto a local area network.    |
+| Example     | A legitime host with the hardware address of 00:d0:59:aa:af:80 has assigned IP address 192.168.100.103. An attacker with hardware address 00:d0:59:12:9b:01 sends spoofed ARP packets claiming the ownership of IP address 192.168.100.103.   |
+| Evidence    | It is possible to detect multiple mappings of a single IP address to various hardware addresses of the legitimate host and an attacker. |
+| Event       | ArpAddressConflict{IpAddress:string,EthAddresses:string[]} |
+| Pcap        | apr-poison.pcapng   |
+| Reference   | https://en.wikipedia.org/wiki/ARP_spoofing   |
+
+
+| Id          | arp.3   |
+| ----------- | -- |
+| Name        | ARP Sweep Attempt   |
+| Description | ARP Sweep allows to enumerate live hosts in the local network using ARP requests, providing an attacker with a simple and fast way to identify possible targets.  |
+| Example     | The attacker sends ARP requests for all IP addresses in the local network. |
+| Event       | ArpSweepAttemp{IpAddress:string,IpTargets:string[]}  |
+| Pcap        | apr-sweep.pcapng   |
+| Reference   |    |
 
 
 ### NetBIOS related errors

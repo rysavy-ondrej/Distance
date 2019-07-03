@@ -304,14 +304,11 @@ namespace Distance.Diagnostics.Arp {
     }
     
     public partial class ArpAddressMapping : Distance.Runtime.DistanceDerived {
-
-       
-
+        
         private String _IpAddr;
         
         private String _EthAddr;
-
-
+        
         [FieldName("ip.addr")]
         public virtual String IpAddr {
             get {
@@ -345,6 +342,128 @@ namespace Distance.Diagnostics.Arp {
             return (((that != null) 
                         && object.Equals(this.IpAddr, that.IpAddr)) 
                         && object.Equals(this.EthAddr, that.EthAddr));
+        }
+    }
+    
+    public partial class ArpAddressConflict : Distance.Runtime.DistanceEvent {
+        
+        private String _IpAddress;
+        
+        private String[] _EthAddresses;
+        
+        [FieldName("ip.address")]
+        public virtual String IpAddress {
+            get {
+                return this._IpAddress;
+            }
+            set {
+                this._IpAddress = value;
+            }
+        }
+        
+        [FieldName("eth.addresses")]
+        public virtual String[] EthAddresses {
+            get {
+                return this._EthAddresses;
+            }
+            set {
+                this._EthAddresses = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "ArpAddressConflict";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("Two or more network hosts claimed ownership of the same network address {0}: {1}." +
+                        " Invalid IP address configuration or ARP spoofing is in progress.", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.EthAddresses));
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Error;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("ArpAddressConflict: ip.address={0} eth.addresses={1}", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.EthAddresses));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddress, this.EthAddresses);
+        }
+        
+        public override bool Equals(object obj) {
+            ArpAddressConflict that = obj as ArpAddressConflict;
+            return (((that != null) 
+                        && object.Equals(this.IpAddress, that.IpAddress)) 
+                        && object.Equals(this.EthAddresses, that.EthAddresses));
+        }
+    }
+    
+    public partial class ArpSweepAttempt : Distance.Runtime.DistanceEvent {
+        
+        private String _IpAddress;
+        
+        private String[] _IpTargets;
+        
+        [FieldName("ip.address")]
+        public virtual String IpAddress {
+            get {
+                return this._IpAddress;
+            }
+            set {
+                this._IpAddress = value;
+            }
+        }
+        
+        [FieldName("ip.targets")]
+        public virtual String[] IpTargets {
+            get {
+                return this._IpTargets;
+            }
+            set {
+                this._IpTargets = value;
+            }
+        }
+        
+        public override string Name {
+            get {
+                return "ArpSweepAttempt";
+            }
+        }
+        
+        public override string Message {
+            get {
+                return string.Format("Host {0} performs ARP Sweep that allows to enumerate live hosts in the local netw" +
+                        "ork using ARP requests send to targets: [{1}].", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.IpTargets));
+            }
+        }
+        
+        public override Distance.Runtime.EventSeverity Severity {
+            get {
+                return Distance.Runtime.EventSeverity.Warning;
+            }
+        }
+        
+        public override string ToString() {
+            return string.Format("ArpSweepAttempt: ip.address={0} ip.targets={1}", Distance.Utils.StringUtils.ToString(this.IpAddress), Distance.Utils.StringUtils.ToString(this.IpTargets));
+        }
+        
+        public override int GetHashCode() {
+            return Distance.Utils.HashFunction.GetHashCode(this.IpAddress, this.IpTargets);
+        }
+        
+        public override bool Equals(object obj) {
+            ArpSweepAttempt that = obj as ArpSweepAttempt;
+            return (((that != null) 
+                        && object.Equals(this.IpAddress, that.IpAddress)) 
+                        && object.Equals(this.IpTargets, that.IpTargets));
         }
     }
 }
