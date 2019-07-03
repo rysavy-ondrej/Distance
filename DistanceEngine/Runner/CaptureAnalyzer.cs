@@ -19,22 +19,42 @@ namespace Distance.Engine.Runner
 {
     public class CaptureAnalyzer
     {
-        private Assembly[] m_diagnosticProfileAssemblies;
-        private int m_degreeOfParallelism = -1;
+        private Assembly[] _diagnosticProfileAssemblies;
+        private int _degreeOfParallelism = -1;
+        private ISession _session;
 
         public int DegreeOfParallelism
         {
-            get => m_degreeOfParallelism;
+            get => _degreeOfParallelism;
             set
             {
                 if (value < -1 || value > 128) return;
-                m_degreeOfParallelism = value;
+                _degreeOfParallelism = value;
             }
         }
 
+        /// <summary>
+        /// Creates analyzer and loads diagnostic rules from the provided assemblies.
+        /// </summary>
+        /// <param name="diagnosticProfileAssemblies"></param>
         public CaptureAnalyzer(params Assembly[] diagnosticProfileAssemblies)
         {
-            m_diagnosticProfileAssemblies = diagnosticProfileAssemblies;
+            _diagnosticProfileAssemblies = diagnosticProfileAssemblies;
+            var sw = new Stopwatch();
+            sw.Start();
+            Console.WriteLine("┌ Initializing repo...");
+            var sessionFactory = CreateRepository();
+            Console.WriteLine($"└ done [{sw.Elapsed}].");
+            sw.Restart();
+            Console.WriteLine("┌ Creating a _session...");
+            _session = sessionFactory.CreateSession(OnInitialization);
+            if (_session == null) throw new InvalidOperationException("Could not create analyzer.");
+            Console.WriteLine($"└ done [{sw.Elapsed}].");            
+        }
+
+        private void OnInitialization(ISession obj)
+        {            
+            // do nothing at this moment...
         }
 
         public async Task AnalyzeCaptureFile(string input)
@@ -45,42 +65,29 @@ namespace Distance.Engine.Runner
             if (File.Exists(logPath)) File.Delete(logPath);
             var eventPath = Path.ChangeExtension(pcapPath, "evt");
             if (File.Exists(eventPath)) File.Delete(eventPath);
-            var dgmlPath = Path.ChangeExtension(pcapPath, "graphml");
-
+            var dgmlPath = Path.ChangeExtension(pcapPath, "gexf");
             Context.ConfigureLog(logPath, eventPath);
             var logger = LogManager.GetLogger(Context.DistanceOutputLoggerName);
 
             var sw = new Stopwatch();
             sw.Start();
-            Console.WriteLine("┌ Initializing repo...");
-            var sessionFactory = CreateRepository(logger);
-            Console.WriteLine($"└ done [{sw.Elapsed}].");
-            sw.Restart();
-            Console.WriteLine("┌ Creating a session...");
-            var session = sessionFactory.CreateSession();
-            Console.WriteLine($"└ done [{sw.Elapsed}].");
-
-            // Write RETE of a session to DGML file for visualization...
-            DumpReteToFile(session, dgmlPath);
-
-            sw.Restart();
             Console.WriteLine("┌ Processing...");
 
-            await LoadFactsAsync(pcapPath, session);
+            await LoadFactsAsync(pcapPath, _session);
 
-            await FireRulesAsync(session);
+            await FireRulesAsync(_session);
 
             Console.WriteLine($"├─ Diagnostic Log written to '{logPath}'.");
             Console.WriteLine($"├─ Diagnostic Events written to '{eventPath}'.");
             Console.WriteLine($"└ done [{sw.Elapsed}].");
         }
 
-        private void DumpReteToFile(ISession target, string dgmlPath)
+        public void DumpReteToFile(string dgmlPath)
         {
-            var session = (ISessionSnapshotProvider)target;
+            var session = (ISessionSnapshotProvider)_session;
             var snapshot = session.GetSnapshot();
             var dgmlWriter = new GraphWriter(snapshot);
-            using (var xmlWriter = XmlWriter.Create(dgmlPath))
+            using (var xmlWriter = XmlWriter.Create(dgmlPath, new XmlWriterSettings {Indent = true, NewLineHandling = NewLineHandling.Entitize  }))
             {
                 dgmlWriter.WriteTo(xmlWriter);
             }
@@ -130,7 +137,7 @@ namespace Distance.Engine.Runner
             var sw = new Stopwatch();
             sw.Start();
             Console.WriteLine($"│┌ Loading facts from '{pcapPath}':");
-            var facts = m_diagnosticProfileAssemblies.SelectMany(x => FactsLoaderFactory.FindDerivedTypes(x, typeof(DistanceFact))).ToList();
+            var facts = _diagnosticProfileAssemblies.SelectMany(x => FactsLoaderFactory.FindDerivedTypes(x, typeof(DistanceFact))).ToList();
             var factsLoader = FactsLoaderFactory.Create<SharkFactsLoader>(facts,
                 info => Console.WriteLine($"│├─ start loading {info.FactType.Name} facts."),
                 (info, count) => Console.WriteLine($"│├─ stop loading {info.FactType.Name} facts ({count})."));
@@ -142,12 +149,12 @@ namespace Distance.Engine.Runner
             return allFactsCount;
         }
 
-        private ISessionFactory CreateRepository(Logger logger)
+        private ISessionFactory CreateRepository()
         {
             var sw = new Stopwatch();
             sw.Start();
             var repository = new RuleRepository();
-            foreach (var assembly in m_diagnosticProfileAssemblies)
+            foreach (var assembly in _diagnosticProfileAssemblies)
             {
                 Console.WriteLine($"│┌ Loading rules from assembly '{assembly.Location}':");
                 repository.Load(x => x.From(Assembly.GetExecutingAssembly(), assembly));

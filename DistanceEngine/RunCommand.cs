@@ -31,17 +31,18 @@ namespace Distance.Engine
             var parallelOption = command.Option("-parallel <NUMBER>", "Sets the degree of parallelism when loading and decoding of input data (-1 means unlimited).", CommandOptionType.SingleValue);
             var decoderClassOption = command.Option("-decoder <STRING>", "Sets the decoder to use for dissecting packets and load facts. Default is 'Shark'.", CommandOptionType.SingleValue);
             var inputFile = command.Argument("InputPcapFile", "An input packet capture file to analyze.", false);
-
+            var dumpRete = command.Option("-dumpRete <FILENAME>", "Writes the snapshot of RETE network to specified file using GEXF fileformat.", CommandOptionType.SingleValue);
             command.OnExecute(async () =>
             {
                 
                 if (!profileAssemblyOption.HasValue())
                 {
-                        throw new Microsoft.Extensions.CommandLineUtils.CommandParsingException(command, "Required options '-profile' is missing.");
+                        throw new CommandParsingException(command, "Required options '-profile' is missing.");
                 }
                 var diagnosticProfileAssemblies = profileAssemblyOption.Values.Select(x=>Assembly.LoadFrom(GetAssemblyPath(x))).ToArray();
                 var analyzer = new CaptureAnalyzer(diagnosticProfileAssemblies);
                 if (parallelOption.HasValue()) analyzer.DegreeOfParallelism = Int32.Parse(parallelOption.Value());
+                if (dumpRete.HasValue()) analyzer.DumpReteToFile(dumpRete.Value());
                 await analyzer.AnalyzeCaptureFile(inputFile.Value);
                 return 0;
             });            
@@ -72,11 +73,6 @@ namespace Distance.Engine
             if (File.Exists(fullpath)) return fullpath;
 
             throw new FileNotFoundException($"Could not locate assembly file '{profileName}'.", profileName);
-        }
-
-      
-
-
-       
+        }      
     }
 }

@@ -26,7 +26,7 @@ namespace NRules.Diagnostics
         {
             var document = new XDocument(new XDeclaration("1.0", "utf-8", null));
 
-            var root = new XElement(Name("gexf"));
+            var root = new XElement(Name("gexf"), new XAttribute("version","1.3"));
             var meta = new XElement(Name("meta"), new XAttribute("lastmodifieddate", DateTime.Now.ToShortDateString()),
                 new XElement(Name("creator"), "DistanceEngine"), new XElement(Name("description"),"Rete Network"));
             var graph = new XElement(Name("graph"), new XAttribute("mode", "static"), new XAttribute("defaultedgetype", "directed"));
@@ -36,6 +36,7 @@ namespace NRules.Diagnostics
             WriteLinks(edges);
             graph.Add(nodes);
             graph.Add(edges);
+            root.Add(meta);
             root.Add(graph);
             document.Add(root);
             document.WriteTo(writer);
