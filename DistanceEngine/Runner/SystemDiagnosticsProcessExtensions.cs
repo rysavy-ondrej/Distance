@@ -11,7 +11,7 @@ namespace Distance.Engine.Runner
             var tcs = new TaskCompletionSource<object>();
             process.EnableRaisingEvents = true;
             process.Exited += (sender, args) => tcs.TrySetResult(null);
-            if (cancellationToken != default)
+            if (cancellationToken != default(CancellationToken))
                 cancellationToken.Register(tcs.SetCanceled);
 
             return tcs.Task;
