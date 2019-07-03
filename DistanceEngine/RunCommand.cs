@@ -48,6 +48,17 @@ namespace Distance.Engine
             });            
         }
 
+        /// <summary>
+        /// Gets the full path to the profile assembly if exists. Otherwise it raises an error <see cref="FileNotFoundException"/>.
+        /// </summary>
+        /// <param name="profileName">A name of the profile assembly.</param>
+        /// <returns>Full path of the assembly to load.</returns>
+        /// <remarks>
+        /// Assembly can be specified only by its name or the filename. If given as full path then 
+        /// it os check that the file exists. If given only by its name, the path resolution is performed. 
+        /// Assembly can be loaded from the working folder, same folder as running assembly or from 
+        /// folder specified by DISTANCE_PROFILES environment variables.
+        /// </remarks>
         public static string GetAssemblyPath(string profileName)
         {
             if (!profileName.EndsWith(".dll"))

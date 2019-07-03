@@ -36,7 +36,7 @@ namespace Distance.Engine.Runner
         /// <summary>
         /// Creates analyzer and loads diagnostic rules from the provided assemblies.
         /// </summary>
-        /// <param name="diagnosticProfileAssemblies"></param>
+        /// <param name="diagnosticProfileAssemblies">An array of diagnostic assemblies to load rules from.</param>
         public CaptureAnalyzer(params Assembly[] diagnosticProfileAssemblies)
         {
             _diagnosticProfileAssemblies = diagnosticProfileAssemblies;
@@ -47,27 +47,22 @@ namespace Distance.Engine.Runner
             Console.WriteLine($"└ done [{sw.Elapsed}].");
             sw.Restart();
             Console.WriteLine("┌ Creating a _session...");
-            _session = sessionFactory.CreateSession(OnInitialization);
+            _session = sessionFactory.CreateSession(_ => { });
             if (_session == null) throw new InvalidOperationException("Could not create analyzer.");
             Console.WriteLine($"└ done [{sw.Elapsed}].");            
-        }
-
-        private void OnInitialization(ISession obj)
-        {            
-            // do nothing at this moment...
         }
 
         public async Task AnalyzeCaptureFile(string input)
         {
             if (!File.Exists(input)) throw new ArgumentException($"File '{input}' does not exist.");
             var pcapPath = Path.GetFullPath(input);
+
             var logPath = Path.ChangeExtension(pcapPath, "log");
             if (File.Exists(logPath)) File.Delete(logPath);
+
             var eventPath = Path.ChangeExtension(pcapPath, "evt");
             if (File.Exists(eventPath)) File.Delete(eventPath);
-            var dgmlPath = Path.ChangeExtension(pcapPath, "gexf");
             Context.ConfigureLog(logPath, eventPath);
-            var logger = LogManager.GetLogger(Context.DistanceOutputLoggerName);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -82,16 +77,15 @@ namespace Distance.Engine.Runner
             Console.WriteLine($"└ done [{sw.Elapsed}].");
         }
 
-        public void DumpReteToFile(string dgmlPath)
+        public void DumpReteToFile(string outputFile)
         {
             var session = (ISessionSnapshotProvider)_session;
             var snapshot = session.GetSnapshot();
-            var dgmlWriter = new GraphWriter(snapshot);
-            using (var xmlWriter = XmlWriter.Create(dgmlPath, new XmlWriterSettings {Indent = true, NewLineHandling = NewLineHandling.Entitize  }))
+            var graphWriter = new GraphWriter(snapshot);
+            using (var xmlWriter = XmlWriter.Create(outputFile, new XmlWriterSettings {Indent = true, NewLineHandling = NewLineHandling.Entitize  }))
             {
-                dgmlWriter.WriteTo(xmlWriter);
+                graphWriter.WriteTo(xmlWriter);
             }
-
         }
 
         private async Task FireRulesAsync(ISession session)
