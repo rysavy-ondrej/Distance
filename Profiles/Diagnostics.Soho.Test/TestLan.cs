@@ -6,20 +6,21 @@ using System.Threading.Tasks;
 
 namespace Distance.Diagnostics.Lan.Tests
 {
-    [TestFixture("TestData/Pcaps/lan-invalid_gateway.pcap")]
-    [TestFixture("TestData/Pcaps/lan-invalid_mask.pcap")]
-    [TestFixture("TestData/Pcaps/lan-ip_conflict.pcap")]
-    [TestFixture("TestData/Pcaps/lan-ip_mismatch.pcap")]
+    [TestFixture("TestData/Pcaps/lan-invalid_gateway.pcapng")]
+    [TestFixture("TestData/Pcaps/lan-invalid_mask.pcapng")]
+    [TestFixture("TestData/Pcaps/lan-ip_conflict.pcapng")]
+    [TestFixture("TestData/Pcaps/lan-ip_mismatch.pcapng")]
     public class TestLan
     {
         private CaptureAnalyzer analyzer;
         private string sourceFilePath;
+        private string outputFolderPath;
 
         public TestLan(string testDataPath)
         {
             var solutionDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)))));
-            this.sourceFilePath = Path.Combine(solutionDir, testDataPath);
-
+            sourceFilePath = Path.Combine(solutionDir, testDataPath);
+            outputFolderPath = Path.Combine(solutionDir, "TestData/Results");
         }
 
         [SetUp]
@@ -32,7 +33,7 @@ namespace Distance.Diagnostics.Lan.Tests
         [Test]
         public async Task Test()
         {
-            await analyzer.AnalyzeCaptureFile(sourceFilePath);
+            await analyzer.AnalyzeCaptureFile(sourceFilePath, outputFolderPath);
             Assert.Pass();
         }
     }

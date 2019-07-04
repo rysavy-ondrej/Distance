@@ -52,15 +52,36 @@ namespace Distance.Engine.Runner
             Console.WriteLine($"└ done [{sw.Elapsed}].");            
         }
 
-        public async Task AnalyzeCaptureFile(string input)
+        string GetOutFilename(string inputFile, string outputFolder, string newExtension)
         {
-            if (!File.Exists(input)) throw new ArgumentException($"File '{input}' does not exist.");
-            var pcapPath = Path.GetFullPath(input);
+            var outputFilename = Path.ChangeExtension(inputFile, newExtension);
+            if (outputFolder != null)
+            {
+                return Path.Combine(Path.GetFullPath(outputFolder), Path.GetFileName(outputFilename));
+            }
+            else
+            {
+                return outputFilename;
+            }
+        }
 
-            var logPath = Path.ChangeExtension(pcapPath, "log");
+        /// <summary>
+        /// Analyzes the provided input packet capture file. 
+        /// </summary>
+        /// <param name="input">The filename of the input capture file.</param>
+        /// <param name="outputfolder">If set, the output files will be written in the given folder.</param>
+        /// <returns>A Task that signalizes completion of the analysis.</returns>
+
+        public async Task AnalyzeCaptureFile(string input, string outputfolder = null)
+        {
+            var pcapPath = Path.GetFullPath(input);
+            if (!File.Exists(pcapPath)) throw new ArgumentException($"File '{pcapPath}' does not exist.");
+            if (outputfolder != null) Directory.CreateDirectory(outputfolder);
+
+            var logPath = GetOutFilename(input, outputfolder, "log");
             if (File.Exists(logPath)) File.Delete(logPath);
 
-            var eventPath = Path.ChangeExtension(pcapPath, "evt");
+            var eventPath = GetOutFilename(input, outputfolder, "evt");
             if (File.Exists(eventPath)) File.Delete(eventPath);
             Context.ConfigureLog(logPath, eventPath);
 
