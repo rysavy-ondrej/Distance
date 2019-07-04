@@ -18,12 +18,13 @@ namespace Distance.Diagnostics.Arp.Tests
     {
         private CaptureAnalyzer analyzer;
         private string sourceFilePath;
+        private string outputFolderPath;
 
         public TestArp(string testDataPath)
         {
             var solutionDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)))));
             this.sourceFilePath = Path.Combine(solutionDir, testDataPath);
-            
+            outputFolderPath = Path.Combine(solutionDir, "TestData/Results");
         }
 
         [SetUp]
@@ -36,7 +37,7 @@ namespace Distance.Diagnostics.Arp.Tests
         [Test]
         public async Task Test()
         {
-            await analyzer.AnalyzeCaptureFile(sourceFilePath);
+            await analyzer.AnalyzeCaptureFile(sourceFilePath, outputFolderPath);
             Assert.Pass();
         }
     }
