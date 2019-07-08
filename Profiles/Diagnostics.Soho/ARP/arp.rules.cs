@@ -9,7 +9,7 @@ using NRules.RuleModel;
 namespace Distance.Diagnostics.Arp
 {
     /// <summary>
-    /// Learns IP <-> MAC mapping from ARP packets.
+    /// Learns IP-to-MAC mapping from ARP packets.
     /// </summary>
     public class ArpMappingRule : DistanceRule
     {
@@ -30,6 +30,9 @@ namespace Distance.Diagnostics.Arp
         }
     }
 
+    /// <summary>
+    /// Pairs ARP requests with corresponding ARP replies.
+    /// </summary>
     public class ArpRequestReplyRule : DistanceRule
     {
         public override void Define()
@@ -45,6 +48,9 @@ namespace Distance.Diagnostics.Arp
                 .Do(ctx => ctx.TryInsert(new ArpRequestReply { Request = request, Reply = reply }));
         }
     }
+    /// <summary>
+    /// Identifies ARP requests without adequate ARP replies.
+    /// </summary>
     public class ArpNoReplyRule : DistanceRule
     {
         public override void Define()
@@ -104,8 +110,11 @@ namespace Distance.Diagnostics.Arp
         }
     }
 
-    
-    public class DetectArpPoissonRule : DistanceRule
+
+    /// <summary>
+    /// Detects ARP poison. This situation is characterized by the existence of multiple ARP replies from different hosts for the single ARP request.
+    /// </summary>
+    public class DetectArpPoisonRule : DistanceRule
     {
         public override void Define()
         {
@@ -128,6 +137,9 @@ namespace Distance.Diagnostics.Arp
         }
     }
 
+    /// <summary>
+    /// Detects ARP sweep activity. It amounts to track the number of ARP requests sent to different local addresses within the specified period of time.
+    /// </summary>
     public class DetectArpSweepRule : DistanceRule
     {
         const int requestsThreshold = 30;
