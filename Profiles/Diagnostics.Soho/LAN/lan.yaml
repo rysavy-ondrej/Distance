@@ -17,8 +17,6 @@ derived:
     fields:       
         - string ip.addr    
 
-
-
   - name: IpSourceEndpoint
     description: Carries information about a single Internet source end-point.
     fields:       
