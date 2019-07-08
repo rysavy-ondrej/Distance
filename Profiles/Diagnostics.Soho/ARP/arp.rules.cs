@@ -19,7 +19,6 @@ namespace Distance.Diagnostics.Arp
             When()
                 .Match(() => arp);
             Then()
-                //.Yield(_ => new ArpAddressMapping { EthAddr = arp.ArpSrcHwMac, IpAddr = arp.ArpSrcProtoIpv4 });
                 .Do(ctx => InfoAndEmit(ctx, arp));
         }
 
@@ -160,11 +159,10 @@ namespace Distance.Diagnostics.Arp
             // the solution here is simple: group packets to windows of the specified lenght and compute 
             // if their number exceeds the given threshold
             var windows = group.GroupBy(x => (int)Math.Floor(x.FrameTimeRelative / timeIntervalLimit));
-            var sweepWindow = windows.FirstOrDefault(x=> x.Count() > requestsThreshold);
-            if (sweepWindow != null)
+            foreach(var sweep in windows.Where(x => x.Count() > requestsThreshold))
             {
-                ctx.Warn($"ARP sweep detected: {group.Key} sends {sweepWindow.Count()} requests within {timeIntervalLimit} seconds.");
-                ctx.TryInsert(new ArpSweepAttempt { IpAddress = group.Key, IpTargets = sweepWindow.Select(x=>x.ArpDstProtoIpv4).ToArray() });
+                ctx.Warn($"ARP sweep detected: {group.Key} sends {sweep.Count()} requests within {timeIntervalLimit} seconds.");
+                ctx.TryInsert(new ArpSweepAttempt { IpAddress = group.Key, IpTargets = sweep.Select(x=>x.ArpDstProtoIpv4).ToArray() });
             }
         }
     }
