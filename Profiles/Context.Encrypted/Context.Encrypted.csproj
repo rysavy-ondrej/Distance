@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Interactive" Version="4.0.0-preview.6.build.801" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\DistanceRuntime\DistanceRuntime.csproj" />
+    <ProjectReference Include="..\..\DistanceUtils\DistanceUtils.csproj" />
+  </ItemGroup>
+
+</Project>

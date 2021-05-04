@@ -40,6 +40,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcaps", "Pcaps", "{93174194
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagnostics.Soho.Test", "Profiles\Diagnostics.Soho.Test\Diagnostics.Soho.Test.csproj", "{17C75A65-FF49-43FA-957C-0EC3E041133C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Context.Encrypted", "Profiles\Context.Encrypted\Context.Encrypted.csproj", "{D505EAF5-A4F0-4372-8062-51D1CEA226DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17C75A65-FF49-43FA-957C-0EC3E041133C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D505EAF5-A4F0-4372-8062-51D1CEA226DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D505EAF5-A4F0-4372-8062-51D1CEA226DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D505EAF5-A4F0-4372-8062-51D1CEA226DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D505EAF5-A4F0-4372-8062-51D1CEA226DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -78,6 +84,7 @@ Global
 		{2C87E663-DFB3-43E4-A1C6-D20A083554FE} = {D863AF84-A428-49B0-B10C-714B688D5D80}
 		{93174194-A8AD-480C-BB19-A22DAE4A996E} = {BADBB87B-56B4-47BE-9434-F96A828B4653}
 		{17C75A65-FF49-43FA-957C-0EC3E041133C} = {D863AF84-A428-49B0-B10C-714B688D5D80}
+		{D505EAF5-A4F0-4372-8062-51D1CEA226DA} = {D863AF84-A428-49B0-B10C-714B688D5D80}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {44B6B909-7C95-4381-BB1C-28D636D53A97}
