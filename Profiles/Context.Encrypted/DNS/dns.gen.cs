@@ -13,9 +13,11 @@ namespace Distance.Diagnostics.Dns {
     using System;
     
     
-    public class DnsPacket : Distance.Runtime.DistanceFact {
+    public partial class DnsPacket : Distance.Runtime.DistanceFact {
         
         private Int32 _FrameNumber;
+        
+        private Double _FrameTimeRelative;
         
         private String _IpSrc;
         
@@ -31,17 +33,21 @@ namespace Distance.Diagnostics.Dns {
         
         private String _DnsQryName;
         
+        private String _DnsA;
+        
         public static string Filter = "dns";
         
         public static string[] Fields = new string[] {
                 "frame.number",
+                "frame.time_relative",
                 "ip.src",
                 "ip.dst",
                 "dns.id",
                 "dns.flags.response",
                 "dns.flags.rcode",
                 "dns.time",
-                "dns.qry.name"};
+                "dns.qry.name",
+                "dns.a"};
         
         [FieldName("frame.number")]
         public virtual Int32 FrameNumber {
@@ -50,6 +56,16 @@ namespace Distance.Diagnostics.Dns {
             }
             set {
                 this._FrameNumber = value;
+            }
+        }
+        
+        [FieldName("frame.time_relative")]
+        public virtual Double FrameTimeRelative {
+            get {
+                return this._FrameTimeRelative;
+            }
+            set {
+                this._FrameTimeRelative = value;
             }
         }
         
@@ -123,43 +139,58 @@ namespace Distance.Diagnostics.Dns {
             }
         }
         
+        [FieldName("dns.a")]
+        public virtual String DnsA {
+            get {
+                return this._DnsA;
+            }
+            set {
+                this._DnsA = value;
+            }
+        }
+        
         public override string ToString() {
-            return string.Format("DnsPacket: frame.number={0} ip.src={1} ip.dst={2} dns.id={3} dns.flags.response={" +
-                    "4} dns.flags.rcode={5} dns.time={6} dns.qry.name={7}", this.FrameNumber, this.IpSrc, this.IpDst, this.DnsId, this.DnsFlagsResponse, this.DnsFlagsRcode, this.DnsTime, this.DnsQryName);
+            return string.Format("DnsPacket: frame.number={0} frame.time_relative={1} ip.src={2} ip.dst={3} dns.id=" +
+                    "{4} dns.flags.response={5} dns.flags.rcode={6} dns.time={7} dns.qry.name={8} dns" +
+                    ".a={9}", Distance.Utils.StringUtils.ToString(this.FrameNumber), Distance.Utils.StringUtils.ToString(this.FrameTimeRelative), Distance.Utils.StringUtils.ToString(this.IpSrc), Distance.Utils.StringUtils.ToString(this.IpDst), Distance.Utils.StringUtils.ToString(this.DnsId), Distance.Utils.StringUtils.ToString(this.DnsFlagsResponse), Distance.Utils.StringUtils.ToString(this.DnsFlagsRcode), Distance.Utils.StringUtils.ToString(this.DnsTime), Distance.Utils.StringUtils.ToString(this.DnsQryName), Distance.Utils.StringUtils.ToString(this.DnsA));
         }
         
         public override int GetHashCode() {
-            return Distance.Utils.HashFunction.GetHashCode(this.FrameNumber, this.IpSrc, this.IpDst, this.DnsId, this.DnsFlagsResponse, this.DnsFlagsRcode, this.DnsTime, this.DnsQryName);
+            return Distance.Utils.HashFunction.GetHashCode(this.FrameNumber, this.FrameTimeRelative, this.IpSrc, this.IpDst, this.DnsId, this.DnsFlagsResponse, this.DnsFlagsRcode, this.DnsTime, this.DnsQryName, this.DnsA);
         }
         
         public override bool Equals(object obj) {
             DnsPacket that = obj as DnsPacket;
-            return (((((((((that != null) 
+            return (((((((((((that != null) 
                         && object.Equals(this.FrameNumber, that.FrameNumber)) 
+                        && object.Equals(this.FrameTimeRelative, that.FrameTimeRelative)) 
                         && object.Equals(this.IpSrc, that.IpSrc)) 
                         && object.Equals(this.IpDst, that.IpDst)) 
                         && object.Equals(this.DnsId, that.DnsId)) 
                         && object.Equals(this.DnsFlagsResponse, that.DnsFlagsResponse)) 
                         && object.Equals(this.DnsFlagsRcode, that.DnsFlagsRcode)) 
                         && object.Equals(this.DnsTime, that.DnsTime)) 
-                        && object.Equals(this.DnsQryName, that.DnsQryName));
+                        && object.Equals(this.DnsQryName, that.DnsQryName)) 
+                        && object.Equals(this.DnsA, that.DnsA));
         }
         
         public static DnsPacket Create(System.Func<string, string, string> mapper, string[] values) {
             DnsPacket newObj = new DnsPacket();
             newObj._FrameNumber = mapper.Invoke("frame.number", values[0]).ToInt32();
-            newObj._IpSrc = mapper.Invoke("ip.src", values[1]).ToString();
-            newObj._IpDst = mapper.Invoke("ip.dst", values[2]).ToString();
-            newObj._DnsId = mapper.Invoke("dns.id", values[3]).ToString();
-            newObj._DnsFlagsResponse = mapper.Invoke("dns.flags.response", values[4]).ToBoolean();
-            newObj._DnsFlagsRcode = mapper.Invoke("dns.flags.rcode", values[5]).ToInt32();
-            newObj._DnsTime = mapper.Invoke("dns.time", values[6]).ToDouble();
-            newObj._DnsQryName = mapper.Invoke("dns.qry.name", values[7]).ToString();
+            newObj._FrameTimeRelative = mapper.Invoke("frame.time_relative", values[1]).ToDouble();
+            newObj._IpSrc = mapper.Invoke("ip.src", values[2]).ToString();
+            newObj._IpDst = mapper.Invoke("ip.dst", values[3]).ToString();
+            newObj._DnsId = mapper.Invoke("dns.id", values[4]).ToString();
+            newObj._DnsFlagsResponse = mapper.Invoke("dns.flags.response", values[5]).ToBoolean();
+            newObj._DnsFlagsRcode = mapper.Invoke("dns.flags.rcode", values[6]).ToInt32();
+            newObj._DnsTime = mapper.Invoke("dns.time", values[7]).ToDouble();
+            newObj._DnsQryName = mapper.Invoke("dns.qry.name", values[8]).ToString();
+            newObj._DnsA = mapper.Invoke("dns.a", values[9]).ToString();
             return newObj;
         }
     }
     
-    public class QueryResponse : Distance.Runtime.DistanceDerived {
+    public partial class DnsQueryResponse : Distance.Runtime.DistanceDerived {
         
         private DnsPacket _Query;
         
@@ -186,7 +217,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("QueryResponse: query={0} response={1}", this.Query, this.Response);
+            return string.Format("DnsQueryResponse: query={0} response={1}", Distance.Utils.StringUtils.ToString(this.Query), Distance.Utils.StringUtils.ToString(this.Response));
         }
         
         public override int GetHashCode() {
@@ -194,14 +225,14 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override bool Equals(object obj) {
-            QueryResponse that = obj as QueryResponse;
+            DnsQueryResponse that = obj as DnsQueryResponse;
             return (((that != null) 
                         && object.Equals(this.Query, that.Query)) 
                         && object.Equals(this.Response, that.Response));
         }
     }
     
-    public class ResponseError : Distance.Runtime.DistanceDerived {
+    public partial class ResponseError : Distance.Runtime.DistanceDerived {
         
         private DnsPacket _Query;
         
@@ -228,7 +259,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("ResponseError: query={0} response={1}", this.Query, this.Response);
+            return string.Format("ResponseError: query={0} response={1}", Distance.Utils.StringUtils.ToString(this.Query), Distance.Utils.StringUtils.ToString(this.Response));
         }
         
         public override int GetHashCode() {
@@ -243,7 +274,7 @@ namespace Distance.Diagnostics.Dns {
         }
     }
     
-    public class NoResponse : Distance.Runtime.DistanceDerived {
+    public partial class NoResponse : Distance.Runtime.DistanceDerived {
         
         private DnsPacket _Query;
         
@@ -258,7 +289,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("NoResponse: query={0}", this.Query);
+            return string.Format("NoResponse: query={0}", Distance.Utils.StringUtils.ToString(this.Query));
         }
         
         public override int GetHashCode() {
@@ -272,7 +303,7 @@ namespace Distance.Diagnostics.Dns {
         }
     }
     
-    public class LateResponse : Distance.Runtime.DistanceDerived {
+    public partial class LateResponse : Distance.Runtime.DistanceDerived {
         
         private DnsPacket _Query;
         
@@ -311,7 +342,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("LateResponse: query={0} response={1} delay={2}", this.Query, this.Response, this.Delay);
+            return string.Format("LateResponse: query={0} response={1} delay={2}", Distance.Utils.StringUtils.ToString(this.Query), Distance.Utils.StringUtils.ToString(this.Response), Distance.Utils.StringUtils.ToString(this.Delay));
         }
         
         public override int GetHashCode() {
@@ -327,7 +358,7 @@ namespace Distance.Diagnostics.Dns {
         }
     }
     
-    public class DnsServer : Distance.Runtime.DistanceDerived {
+    public partial class DnsServer : Distance.Runtime.DistanceDerived {
         
         private String _IpAddress;
         
@@ -342,7 +373,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("DnsServer: ip.address={0}", this.IpAddress);
+            return string.Format("DnsServer: ip.address={0}", Distance.Utils.StringUtils.ToString(this.IpAddress));
         }
         
         public override int GetHashCode() {
@@ -356,7 +387,7 @@ namespace Distance.Diagnostics.Dns {
         }
     }
     
-    public class DnsServerDownEvent : Distance.Runtime.DistanceEvent {
+    public partial class DnsServerDownEvent : Distance.Runtime.DistanceEvent {
         
         private DnsServer _Server;
         
@@ -389,7 +420,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("DnsServerDownEvent: server={0}", this.Server);
+            return string.Format("DnsServerDownEvent: server={0}", Distance.Utils.StringUtils.ToString(this.Server));
         }
         
         public override int GetHashCode() {
@@ -403,7 +434,7 @@ namespace Distance.Diagnostics.Dns {
         }
     }
     
-    public class DnsServerUnreliableEvent : Distance.Runtime.DistanceEvent {
+    public partial class DnsServerUnreliableEvent : Distance.Runtime.DistanceEvent {
         
         private DnsServer _Server;
         
@@ -436,7 +467,7 @@ namespace Distance.Diagnostics.Dns {
         }
         
         public override string ToString() {
-            return string.Format("DnsServerUnreliableEvent: server={0}", this.Server);
+            return string.Format("DnsServerUnreliableEvent: server={0}", Distance.Utils.StringUtils.ToString(this.Server));
         }
         
         public override int GetHashCode() {

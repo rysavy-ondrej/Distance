@@ -40,7 +40,7 @@ namespace Distance.Engine.Runner
             return Observable.Create<string>(observer => Task.Run(async () => 
             {
                 var fieldString = String.Join(" -e ", info.Fields);
-                var arguments = $"-r {inputfile} -Y {info.Filter} -T fields -e {fieldString}";
+                var arguments = $"-r {inputfile} -Y \"{info.Filter}\" -T fields -e {fieldString}";
                 var count = 0;
                 var process = new Process()
                 {
@@ -53,6 +53,8 @@ namespace Distance.Engine.Runner
                         CreateNoWindow = true,
                     }
                 };
+
+                Console.WriteLine($"│├─ exec: tshark {arguments}");
                 process.Start();
                 m_onStarted?.Invoke(info);
                 while (true)

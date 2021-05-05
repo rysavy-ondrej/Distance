@@ -30,7 +30,7 @@ namespace Distance.Diagnostics.Dns
                 .Match<DnsPacket>(() => response, x => x.DnsFlagsResponse == true, x => x.IpDst == query.IpSrc, x=> x.IpSrc == query.IpDst, x => x.DnsId == query.DnsId);
 
             Then()
-                .Do(ctx => ctx.TryInsert(new QueryResponse { Query = query, Response = response }));
+                .Do(ctx => ctx.TryInsert(new DnsQueryResponse { Query = query, Response = response }));
         }
     }
 
@@ -68,9 +68,9 @@ namespace Distance.Diagnostics.Dns
 
         public override void Define()
         {
-            QueryResponse qr = null;
+            DnsQueryResponse qr = null;
             When()
-                .Match<QueryResponse>(() => qr, x => x.Response.DnsFlagsRcode != 0);
+                .Match<DnsQueryResponse>(() => qr, x => x.Response.DnsFlagsRcode != 0);
 
             Then()
                 .Do(ctx => ctx.Error($"DNS query {qr.Query} yields to error {(DnsResponseCode)qr.Response.DnsFlagsRcode} ({ResponseCodeDescription[(DnsResponseCode)qr.Response.DnsFlagsRcode]}) . DNS response {qr.Response}. Response time was {qr.Response.DnsTime}s."))
@@ -97,7 +97,7 @@ namespace Distance.Diagnostics.Dns
     {
         public override void Define()
         {
-            QueryResponse qr = null;
+            DnsQueryResponse qr = null;
             When()
                 .Match(() => qr, x => x.Response.DnsTime > 5.0);
             Then()
@@ -116,7 +116,7 @@ namespace Distance.Diagnostics.Dns
             DnsServer server = null;
             When()
                 .Match(() => server)
-                .Not<QueryResponse>(qr => qr.Query.IpDst == server.IpAddress);
+                .Not<DnsQueryResponse>(qr => qr.Query.IpDst == server.IpAddress);
             Then()
                 .Do(ctx => ctx.TryInsert(new DnsServerDownEvent { Server = server }));
         }
@@ -132,7 +132,7 @@ namespace Distance.Diagnostics.Dns
             DnsServer server = null;
             When()
                 .Match(() => server)
-                .Match<QueryResponse>(qr => qr.Query.IpDst == server.IpAddress)
+                .Match<DnsQueryResponse>(qr => qr.Query.IpDst == server.IpAddress)
                 .Match<NoResponse>( nr => nr.Query.IpDst == server.IpAddress);
             Then()
                 .Do(ctx => ctx.TryInsert(new DnsServerUnreliableEvent { Server = server }));

@@ -74,6 +74,7 @@ namespace Distance.Runtime
             switch(@event.Severity)
             {
                 case EventSeverity.Information:
+                case EventSeverity.Context:
                     m_eventLogger.Info($"{@event.Name}: {@event.Message}");
                     break;
                 case EventSeverity.Warning:

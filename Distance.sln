@@ -36,6 +36,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcaps", "Pcaps", "{93174194
 		TestData\Pcaps\lan-invalid_mask.pcap = TestData\Pcaps\lan-invalid_mask.pcap
 		TestData\Pcaps\lan-ip_conflict.pcap = TestData\Pcaps\lan-ip_conflict.pcap
 		TestData\Pcaps\lan-ip_mismatch.pcap = TestData\Pcaps\lan-ip_mismatch.pcap
+		TestData\Pcaps\testbed-16.pcap = TestData\Pcaps\testbed-16.pcap
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagnostics.Soho.Test", "Profiles\Diagnostics.Soho.Test\Diagnostics.Soho.Test.csproj", "{17C75A65-FF49-43FA-957C-0EC3E041133C}"

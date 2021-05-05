@@ -1,0 +1,50 @@
+meta:
+  namespace: Distance.Diagnostics.Tls
+facts:
+  - name: TlsCLientHello
+    where: tls.handshake.type == 1
+    select: 
+      - int32     frame.number
+      - double    frame.time_relative
+      - string    ip.src
+      - string    ip.dst
+      - int32     tcp.srcport
+      - int32     tcp.dstport
+      - int32     tls.record.version 
+      - int32     tls.handshake.cipher_suites_length
+       
+  - name: TlsServerHello
+    where: tls.handshake.type == 2
+    select:
+      - int32     frame.number
+      - double    frame.time_relative
+      - string    ip.src
+      - string    ip.dst
+      - int32     tcp.srcport
+      - int32     tcp.dstport
+      - int32     tls.record.version 
+      - int32     tls.handshake.ciphersuite
+
+derived:
+  - name: TlsHandshake
+    fields: 
+      - double    timestamp
+      - string    ipSrc
+      - string    ipDst
+      - int32     tcpSrcport
+      - int32     tcpDstport  
+      - TlsCLientHello clientHello
+      - TlsServerHello serverHello
+events:
+  - name: TlsWithDnsContextEvent
+    severity:     error
+    description:  "TLS flow with DNS context found."
+    message:  "TLS flow {ipSrc}:{tcpSrcport}->{ipDst}:{tcpDstport} ({timestamp}) with DNS context {dnsContext} found."
+    fields: 
+      - double    timestamp
+      - string    ipSrc
+      - string    ipDst
+      - int32     tcpSrcport
+      - int32     tcpDstport  
+      - TlsHandshake tlsHandshake
+      - DnsQueryResponse dnsContext

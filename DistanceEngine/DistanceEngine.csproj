@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>Distance.Engine</RootNamespace>
+    <StartupObject>Distance.Engine.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

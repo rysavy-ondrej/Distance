@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Distance.Runtime
 {
-    public enum EventSeverity { Information, Warning, Error };
+    public enum EventSeverity { Information, Warning, Error, Context };
     public abstract class DistanceEvent
     {
         public abstract string Name { get; }

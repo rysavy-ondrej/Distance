@@ -5,6 +5,7 @@ facts:
     where: dns
     select: 
       - int32     frame.number
+      - double    frame.time_relative
       - string    ip.src
       - string    ip.dst
       - string    dns.id
@@ -12,8 +13,9 @@ facts:
       - int32     dns.flags.rcode
       - double    dns.time
       - string    dns.qry.name
+      - string    dns.a
 derived:
-  - name: QueryResponse
+  - name: DnsQueryResponse
     fields: 
       - DnsPacket query
       - DnsPacket response
